@@ -147,15 +147,17 @@ def get_time_table(filename: str, class_pattern: str) -> pd.DataFrame:
     return final_df
 
 
-def convert_to_datetime(obj):
-    if isinstance(obj, datetime):
-        return obj
-    elif isinstance(obj, datetime.date):
-        return datetime(obj.year, obj.month, obj.day)
-    elif isinstance(obj, int):
-        return datetime.fromtimestamp(obj)
-    else:
-        raise TypeError("Unsupported type for datetime conversion")
+def convert_to_24hour(time_str, is_end_time=False):
+    """Convert time to 24-hour format considering class schedule rules."""
+    hours, minutes = map(int, time_str.split(':'))
+    
+    # For start times: hours <= 11 are AM, hours >= 12 are PM
+    # For end times: all times are PM
+    if is_end_time or hours <= 7:
+        if hours != 12:  
+            hours += 12
+    
+    return f"{hours:02d}:{minutes:02d}"
 
 
 def generate_calendar(timetable, start_date, end_date):
@@ -196,10 +198,14 @@ def generate_calendar(timetable, start_date, end_date):
         for day in data:
             if day["day"] == day_name:
                 for class_info in day["data"]:
-                    if all(class_info.get(key) for key in ['start', 'end', 'value']):
+                    if class_info["value"]:  
                         event = Event()
-                        start_time = datetime.strptime(class_info["start"], "%H:%M")
-                        end_time = datetime.strptime(class_info["end"], "%H:%M")
+                        
+                        start_time_24h = convert_to_24hour(class_info["start"])
+                        end_time_24h = convert_to_24hour(class_info["end"], is_end_time=True)
+                        
+                        start_time = datetime.strptime(start_time_24h, "%H:%M")
+                        end_time = datetime.strptime(end_time_24h, "%H:%M")
                         
                         event_start = current_date.replace(
                             hour=start_time.hour, 

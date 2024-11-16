@@ -63,6 +63,30 @@ def get_json_table(request: TimeTableRequest):
     return json.loads(table)
 
 
+def convert_to_24hour(time_str: str, previous_was_pm: bool = False) -> str:
+    """Convert time to 24-hour format based on class schedule rules.
+    
+    Rules:
+    - For start times: 7-11 are AM, 12 and 1-7 are PM
+    - For end times: if previous time was PM, then this is also PM
+    """
+    hours, minutes = map(int, time_str.split(':'))
+    
+    if not previous_was_pm:
+        if 7 <= hours <= 11:
+            return f"{hours}:{minutes:02d}"
+        elif hours == 12:
+            return f"12:{minutes:02d}"
+        else:
+            return f"{hours + 12}:{minutes:02d}"
+    else:
+        if hours == 12:
+            return f"12:{minutes:02d}"
+        elif hours <= 7:
+            return f"{hours + 12}:{minutes:02d}"
+        return f"{hours}:{minutes:02d}"
+
+
 @router.post("/get_time_table")
 async def get_time_table_endpoint(request: TimeTableRequest):
     """
@@ -83,6 +107,8 @@ async def get_time_table_endpoint(request: TimeTableRequest):
     for index, day in enumerate(json_data):
         day_data = []
         current_slot = None
+        previous_was_pm = False
+        
         for key, value in day.items():
             time_parts = key.split("-")
             if len(time_parts) == 2:
@@ -90,16 +116,24 @@ async def get_time_table_endpoint(request: TimeTableRequest):
             else:
                 start = "-".join(time_parts[:-1])
                 end = time_parts[-1]
-            if (
-                current_slot
-                and current_slot["value"] == value
-                and current_slot["end"] == start
-            ):
-                current_slot["end"] = end
+                
+            # Convert start time and determine if it's PM
+            start_24h = convert_to_24hour(start)
+            start_hour = int(start_24h.split(':')[0])
+            is_pm = start_hour >= 12
+            
+            # Convert end time based on whether start was PM
+            end_24h = convert_to_24hour(end, is_pm)
+            
+            if current_slot and current_slot["value"] == value and current_slot["end"] == start_24h:
+                current_slot["end"] = end_24h
             else:
                 if current_slot:
                     day_data.append(current_slot)
-                current_slot = {"start": start, "end": end, "value": value}
+                current_slot = {"start": start_24h, "end": end_24h, "value": value}
+            
+            previous_was_pm = is_pm
+            
         if current_slot:
             day_data.append(current_slot)
         table_data.append({"day": days[index], "data": day_data})
