@@ -24,7 +24,10 @@ export default function Calendar({ schedule }: CalendarProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto">
+      <div className={clsx(
+        "max-h-[750px] my-auto mx-auto",
+        viewMode === 'week' ? "max-w-12xl" : "max-w-4xl"
+      )}>
         <div className="bg-white rounded-lg shadow-lg">
           {/* Header */}
           <div className="p-4 border-b flex items-center justify-between flex-wrap gap-4">
@@ -112,7 +115,7 @@ export default function Calendar({ schedule }: CalendarProps) {
           </div>
 
           {/* Calendar Grid */}
-          <div className="p-4">
+          <div className="overflow-auto max-9xl px-4">
             {viewMode === 'week' ? (
               <WeekView schedule={schedule} />
             ) : (

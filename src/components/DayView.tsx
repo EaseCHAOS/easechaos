@@ -1,12 +1,22 @@
 import React from 'react';
 import { DaySchedule } from '../types';
 import clsx from 'clsx';
+import { COURSE_CODES, COLOR_SCHEMES, DEFAULT_COLOR } from '../constants/courseCodes';
 
 interface DayViewProps {
   schedule?: DaySchedule;
 }
 
-const timeSlots = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
+const timeSlots = Array.from({ length: 14 }, (_, i) => {
+  const hour = i + 7;
+  
+  if (hour === 12) {
+    return '12 PM';
+  }
+  return hour > 12 
+    ? `${hour - 12} PM` 
+    : `${hour} AM`;
+});
 
 interface PositionedEvent {
   start: string;
@@ -15,47 +25,115 @@ interface PositionedEvent {
   startPosition: number;
   duration: number;
   isOverlapping?: boolean;
+  splitIndex?: number;
+  totalSplits?: number;
+  isContinuation?: boolean;
+  continuationGroup?: string;
 }
 
-function convertTo24Hour(timeStr: string): number {
+function convertTimeToNumber(timeStr: string): number {
   const [hours, minutes] = timeStr.split(':').map(Number);
-  if (hours < 7) { // If hour is less than 7, it's PM
-    return hours + 12 + (minutes || 0) / 60;
-  }
-  return hours + (minutes || 0) / 60;
+  return hours + minutes / 60;
+}
+
+const courseColorMap = new Map(
+  COURSE_CODES.map((code, index) => [
+    code, 
+    COLOR_SCHEMES[index % COLOR_SCHEMES.length -1]
+  ])
+);
+
+const getCourseColor = (value: string) => {
+  const match = value.match(/\b\d{3}\b/);
+  if (!match) return DEFAULT_COLOR;
+  return courseColorMap.get(match[0] as (typeof COURSE_CODES)[number]) || DEFAULT_COLOR;
+};
+
+function splitEventValue(value: string): string[] {
+  return value.split('\n').filter(Boolean);
 }
 
 export default function DayView({ schedule }: DayViewProps) {
+  const [currentTime, setCurrentTime] = React.useState(new Date());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentTimePosition = React.useMemo(() => {
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const timeInHours = hours + minutes / 60;
+    return ((timeInHours - 7) / 13) * 100;
+  }, [currentTime]);
+
   if (!schedule) {
     return (
-      <div className="flex items-center justify-center h-[900px] text-gray-500">
+      <div className="flex items-center justify-center h-[700px] text-gray-500">
         No schedule available for this day
       </div>
     );
   }
 
-  // Process events to handle overlaps
   const processedEvents: PositionedEvent[] = schedule.data
     .filter((slot): slot is typeof slot & { value: string } => Boolean(slot.value))
-    .map(slot => {
-      // Convert times to 24-hour format for positioning
-      const startTime = convertTo24Hour(slot.start);
-      const endTime = convertTo24Hour(slot.end);
+    .flatMap(slot => {
+      const startTime = convertTimeToNumber(slot.start);
+      const endTime = convertTimeToNumber(slot.end);
       
-      const startPosition = (startTime - 7) / (timeSlots.length - 1) * 100;
-      const endPosition = (endTime - 7) / (timeSlots.length - 1) * 100;
+      const startPosition = ((startTime - 7) / 13) * 100;
+      const duration = ((endTime - startTime) / 13) * 100;
       
-      return {
+      const values = splitEventValue(slot.value);
+      
+      return values.map((value, index) => ({
         start: slot.start,
         end: slot.end,
-        value: slot.value,
+        value,
         startPosition,
-        duration: endPosition - startPosition
-      };
+        duration,
+        splitIndex: index,
+        totalSplits: values.length,
+        continuationGroup: value.match(/CE \d[A-Z] \d{3}/)?.[0]
+      }));
     })
     .sort((a, b) => a.startPosition - b.startPosition);
 
-  // Check for overlaps
+  let currentGroup: { [key: string]: PositionedEvent[] } = {};
+  processedEvents.forEach((event) => {
+    if (event.continuationGroup) {
+      if (!currentGroup[event.continuationGroup]) {
+        currentGroup[event.continuationGroup] = [];
+      }
+      currentGroup[event.continuationGroup].push(event);
+    }
+  });
+
+  const mergedEvents = processedEvents.reduce((acc: PositionedEvent[], event) => {
+    if (!event.continuationGroup || !currentGroup[event.continuationGroup]) {
+      acc.push(event);
+      return acc;
+    }
+
+    const group = currentGroup[event.continuationGroup];
+    if (group.length <= 1) {
+      acc.push(event);
+      return acc;
+    }
+
+    if (event === group[0]) {
+      const lastEvent = group[group.length - 1];
+      acc.push({
+        ...event,
+        end: lastEvent.end,
+        duration: ((convertTimeToNumber(lastEvent.end) - convertTimeToNumber(event.start)) / 13) * 100
+      });
+    }
+
+    return acc;
+  }, []);
+
   processedEvents.forEach((event, index) => {
     const overlappingEvents = processedEvents.filter((otherEvent, otherIndex) => {
       if (otherIndex === index) return false;
@@ -68,60 +146,79 @@ export default function DayView({ schedule }: DayViewProps) {
   });
 
   return (
-    <div className="grid grid-cols-[100px_1fr] gap-4 h-[700px] overflow-y-auto relative py-2">
-      {/* Time labels */}
-      <div className="sticky left-0 h-full bg-white">
-        {timeSlots.map((hour, index) => (
-          <div
-            key={hour}
-            className="absolute text-sm text-gray-500"
-            style={{
-              top: `${(index / (timeSlots.length - 1)) * 100}%`,
-              right: '1rem',
-              transform: 'translateY(-50%)'
-            }}
-          >
-            {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
-          </div>
-        ))}
-      </div>
-
-      {/* Schedule grid */}
-      <div className="relative border-l border-gray-200 pt-2">
-        {/* Time slot lines */}
-        <div className="absolute inset-0 pt-2">
-          {timeSlots.map((hour, index) => (
+    <div className="mx-auto max-w-4xl w-full">
+      <div className="grid grid-cols-[100px_1fr] gap-4 h-[720px] overflow-y-auto relative pt-4 pb-6">
+        <div className="sticky left-0 h-full">
+          {timeSlots.map((time, index) => (
             <div
-              key={hour}
-              className="absolute w-full border-t border-gray-200"
-              style={{ top: `${(index / (timeSlots.length - 1)) * 100}%` }}
-            />
+              key={time}
+              className="absolute text-sm text-gray-700"
+              style={{
+                top: `${(index / (timeSlots.length - 1)) * 100}%`,
+                right: '1rem',
+                transform: 'translateY(-50%)'
+              }}
+            >
+              {time}
+            </div>
           ))}
         </div>
 
-        {/* Events */}
-        {processedEvents.map((event, index) => (
-          <div
-            key={index}
-            className={clsx(
-              "absolute p-2 rounded-md",
-              "bg-blue-100 border border-blue-200",
-              "hover:bg-blue-200 transition-colors cursor-pointer"
-            )}
-            style={{
-              top: `${event.startPosition}%`,
-              height: `${event.duration}%`,
-              minHeight: '40px',
-              left: event.isOverlapping ? '50%' : '0',
-              width: event.isOverlapping ? 'calc(50% - 1px)' : 'calc(100% - 1px)',
-              marginLeft: '1px'
-            }}
+        <div className="relative border-l border-gray-200 pt-2">
+          <div 
+            className="absolute w-full h-[2px] bg-gray-500 z-10"
+            style={{ 
+              top: `${currentTimePosition}%`,  
+              transform: 'translateY(-50%)'
+            }} 
           >
-            <div className="text-sm text-blue-700 line-clamp-2">
-              {event.value}
-            </div>
+            <div className="absolute left-0 w-2 h-2 rounded-full bg-gray-500" 
+                 style={{ transform: 'translate(-50%, -34%)' }} /> 
           </div>
-        ))}
+
+          <div className="absolute inset-0 pt-2 pb-4">
+            {timeSlots.map((hour, index) => (
+              <div
+                key={hour}
+                className="absolute w-full border-t border-gray-200"
+                style={{ top: `${(index / (timeSlots.length - 1)) * 100}%` }}
+              />
+            ))}
+          </div>
+
+          {mergedEvents.map((event, index) => {
+            const colors = getCourseColor(event.value);
+            const width = (event.totalSplits ?? 1) > 1 
+              ? `calc(${100 / (event.totalSplits ?? 1)}% - 1rem)` 
+              : event.isOverlapping 
+                ? 'calc(50% - 1rem)' 
+                : 'calc(100% - 1rem)';
+            
+            return (
+              <div
+                key={index}
+                className={clsx(
+                  "absolute p-2 rounded-md border",
+                  colors.bg, colors.border,
+                  "hover:brightness-95 transition-colors cursor-pointer"
+                )}
+                style={{
+                  top: `${event.startPosition}%`,
+                  height: `${event.duration}%`,
+                  minHeight: '40px',
+                  left: (event.totalSplits ?? 1) > 1 
+                    ? `calc(${(event.splitIndex! * 100) / event.totalSplits!}%)`
+                    : event.isOverlapping ? '50%' : '0',
+                  width
+                }}
+              >
+                <div className={clsx("text-sm line-clamp-2", colors.text)}>
+                  {event.value}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

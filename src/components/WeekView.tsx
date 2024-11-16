@@ -23,6 +23,21 @@ function splitEventValue(value: string): string[] {
 }
 
 export default function WeekView({ schedule }: WeekViewProps) {
+  const [currentTime, setCurrentTime] = React.useState(new Date());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentTimePosition = React.useMemo(() => {
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const timeInHours = hours + minutes / 60;
+    const totalHours = 13; // 7 AM to 8 PM
+    return ((timeInHours - 7) / totalHours) * 100;
+  }, [currentTime]);
+
   const courseColorMap = useMemo(() => {
     const map = new Map();
     COURSE_CODES.forEach((code, index) => {
@@ -74,7 +89,6 @@ export default function WeekView({ schedule }: WeekViewProps) {
     <div className="relative w-full h-[700px]">
       <div className="overflow-x-auto">
         <div className="min-w-[2000px] pb-2">
-          {/* Time slots header - Make it sticky */}
           <div className="grid grid-cols-[100px_repeat(27,1fr)] mb-2 sticky top-0 bg-white z-10 pb-2 h-full">
             <div className="font-medium text-gray-700 bg-white sticky min-w-[100px] left-0 flex justify-end z-[100]"/>
             {timeSlots.map((slot, index) => (
@@ -88,20 +102,33 @@ export default function WeekView({ schedule }: WeekViewProps) {
           </div>
 
           {/* Days and events grid */}
-          <div className="space-y-1">
+          <div className="space-y-1 relative">
+            <div 
+              className="absolute h-full w-[2px] bg-gray-500 z-20"
+              style={{ 
+                left: `${currentTimePosition}%`,
+                transform: 'translateX(-50%)'
+              }}
+            >
+              {/* knob  */}
+              <div 
+                className="absolute top-0 w-2 h-2 rounded-full bg-gray-500"
+                style={{ transform: 'translate(-35%, -50%)' }}
+              />
+            </div>
+
             {days.map((day) => {
               const daySchedule = processedSchedule.find((s) => s.day === day);
               
               return (
                 <div key={day} className="grid grid-cols-[100px_1fr] gap-2">
-                  {/* Day label */}
                   <div className="font-medium text-gray-700 py-2 sticky left-0 flex justify-end z-[100] bg-white pr-[6px]">
                     {day}
                   </div>
                   
-                  {/* Time slots and events */}
+                  {/* time slots and events */}
                   <div className="relative h-28 bg-gray-50 rounded-lg">
-                    {/* Time boundary lines */}
+                    {/* time boundary lines */}
                     <div className="absolute inset-0 grid grid-cols-[repeat(27,1fr)] pointer-events-none">
                       {timeSlots.map((_, index) => (
                         <div 

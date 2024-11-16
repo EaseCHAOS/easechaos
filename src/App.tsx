@@ -8,7 +8,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('http://0.0.0.0:80/api/v1/get_time_table', {
+    fetch('http://127.0.0.1:8000/api/v1/get_time_table', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
