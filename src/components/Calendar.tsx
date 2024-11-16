@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { DayPicker } from 'react-day-picker';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutGrid, Calendar as CalendarDayIcon } from 'lucide-react';
@@ -7,14 +7,39 @@ import { WeekSchedule } from '../types';
 import WeekView from './WeekView';
 import DayView from './DayView';
 import 'react-day-picker/dist/style.css';
+import { useParams } from 'react-router-dom';
 
-interface CalendarProps {
-  schedule: WeekSchedule;
-}
+// interface CalendarProps {
+//   schedule: WeekSchedule;
+// }
 
 type ViewMode = 'day' | 'week';
 
-export default function Calendar({ schedule }: CalendarProps) {
+export default function Calendar() {
+  const [schedule, setSchedule] = useState<WeekSchedule>([]);
+  const [error, setError] = useState<string | null>(null);
+  const { dept, year } = useParams();
+
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/api/v1/get_time_table', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filename: 'Draft_2',
+        class_pattern: `${dept} ${year}`
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        setSchedule(data);
+      })
+      .catch(() => {
+        setError('API not available');
+      });
+  }, [dept, year]);
+
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
@@ -24,6 +49,7 @@ export default function Calendar({ schedule }: CalendarProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
+      {error && <div className="text-red-500 mb-4">{error}</div>}
       <div className={clsx(
         "max-h-[750px] my-auto mx-auto",
         viewMode === 'week' ? "max-w-12xl" : "max-w-4xl"

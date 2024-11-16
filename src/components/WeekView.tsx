@@ -19,7 +19,20 @@ function convertTimeToNumber(timeStr: string): number {
 }
 
 function splitEventValue(value: string): string[] {
-  return value.split('\n').filter(Boolean);
+  const lines = value.split('\n').filter(Boolean);
+  
+  // Check if lines contain the same course code
+  const getCourseCode = (line: string) => {
+    const match = line.match(/\b\d{3}\b/);
+    return match ? match[0] : '';
+  };
+  
+  const firstCourseCode = getCourseCode(lines[0]);
+  if (lines.every(line => getCourseCode(line) === firstCourseCode)) {
+    return [lines[0]]; // Return only first occurrence if same course
+  }
+  
+  return lines;
 }
 
 export default function WeekView({ schedule }: WeekViewProps) {
@@ -149,7 +162,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
                         <div
                           key={index}
                           className={clsx(
-                            "absolute p-1 rounded-md z-20",
+                            `absolute p-2 rounded-md border border-l-4 border-l-[${colors.bg}]`,
                             colors.bg, colors.border,
                             "hover:brightness-95 transition-colors cursor-pointer",
                             "flex items-center justify-center"

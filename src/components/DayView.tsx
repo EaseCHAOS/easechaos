@@ -198,7 +198,7 @@ export default function DayView({ schedule }: DayViewProps) {
               <div
                 key={index}
                 className={clsx(
-                  "absolute p-2 rounded-md border",
+                  `absolute p-2 rounded-md border border-l-4 border-l-[${colors.bg}]`,
                   colors.bg, colors.border,
                   "hover:brightness-95 transition-colors cursor-pointer"
                 )}
