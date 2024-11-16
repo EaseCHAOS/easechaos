@@ -43,8 +43,8 @@ export default function WeekView({ schedule }: WeekViewProps) {
 
   return (
     <div className="relative">
-      <div className="overflow-x-auto">
-        <div className="min-w-[800px]">
+      <div className="overflow-x-auto py-2">
+        <div className="min-w-[850px]">
           {/* Days header */}
           <div className="grid grid-cols-[100px_1fr_1fr_1fr_1fr_1fr] mb-2">
             <div className="sticky left-0 bg-white z-10" /> {/* sticky empty cell to cover day headers on scroll*/}
