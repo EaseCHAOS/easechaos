@@ -1,17 +1,43 @@
 import redis
-import os
 from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+import logging
 
 load_dotenv()
 
-r = redis.Redis(
-    host=os.environ.get("REDIS_HOST"), 
-    port=os.environ.get("REDIS_PORT"),
-    password=os.environ.get("REDIS_PASSWORD"),
-    db=0,
-    ssl=True,
-)
+logger = logging.getLogger(__name__)
 
+class Settings(BaseSettings):
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_PASSWORD: str
+    PORT: int = 80
+
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+
+def get_redis_connection():
+    try:
+        return redis.Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            password=settings.REDIS_PASSWORD,
+            db=0,
+            ssl=True,
+            decode_responses=True,
+            socket_timeout=5,
+            retry_on_timeout=True,
+        )
+    except redis.ConnectionError as e:
+        logger.error(f"Redis connection failed: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error connecting to Redis: {e}")
+        raise
+
+r = get_redis_connection()
 
 def create_cache_key_from_parameters(filename: str, class_pattern: str) -> str:
     filename = filename.split(".")[0]  # DRAFT_4
@@ -33,56 +59,36 @@ def get_table_from_cache(filename: str, class_pattern: str) -> str | None:
 
     Returns
     -------
-    pandas.DataFrame
-        The table from the cache.
+    str | None
+        The table string from the cache or None if not found.
     """
+    try:
+        return r.get(create_cache_key_from_parameters(filename, class_pattern))
+    except redis.RedisError as e:
+        logger.error(f"Error retrieving from cache: {e}")
+        return None
 
-    return r.get(create_cache_key_from_parameters(filename, class_pattern))
 
-
-def add_table_to_cache(table: str, filename: str, class_pattern: str):
+def add_table_to_cache(table: str, filename: str, class_pattern: str, expire_seconds: int = 3600):
     """
     Add a table to the cache.
 
     Parameters
     ----------
-    table : pandas.DataFrame
-        The table to add to the cache.
+    table : str
+        The table string to add to the cache.
     class_pattern : str
         The pattern for the class.
     filename : str
         The name of the file for the timetable.
+    expire_seconds : int
+        Number of seconds until the cache entry expires (default: 1 hour)
     """
-
-    r.set(create_cache_key_from_parameters(filename, class_pattern), table)
-
-
-# def create_cache_key_from_filename(filename: str) -> str:
-#     """
-#     Create a cache key based on the provided filename.
-
-#     Parameters:
-#         filename (str): The name of the file to generate the cache key from.
-
-#     Returns:
-#         str: The cache key created from the filename.
-#     """
-
-#     return f"{filename}"
-
-
-# def get_file_from_cache(filename: str) -> bytes | None:
-#     """
-#     Get a file from the cache.
-
-#     Parameters:
-#         filename (str): The name of the file to retrieve from the cache.
-
-#     Returns:
-#         bytes | None: The contents of the file if it exists in the cache, or None if it does not.
-#     """
-#     return r.get(create_cache_key_from_filename(filename))
-
-
-# def add_file_to_cache(file_content: bytes, filename: str):
-#     return r.set(create_cache_key_from_filename(filename), file_content)
+    try:
+        r.setex(
+            create_cache_key_from_parameters(filename, class_pattern),
+            expire_seconds,
+            table
+        )
+    except redis.RedisError as e:
+        logger.error(f"Error adding to cache: {e}")

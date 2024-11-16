@@ -2,8 +2,6 @@ import regex as re
 import pandas as pd
 from icalendar import Event, Calendar
 from datetime import datetime, timedelta
-import json
-import pytz
 import openpyxl
 
 
@@ -155,7 +153,6 @@ def convert_to_datetime(obj):
     elif isinstance(obj, datetime.date):
         return datetime(obj.year, obj.month, obj.day)
     elif isinstance(obj, int):
-        # Example conversion: if obj is a timestamp
         return datetime.fromtimestamp(obj)
     else:
         raise TypeError("Unsupported type for datetime conversion")
@@ -186,37 +183,38 @@ def generate_calendar(timetable, start_date, end_date):
     data = timetable
 
     cal = Calendar()
+    cal.add('version', '2.0')  
+    cal.add('prodid', '-//Class Schedule Generator//EN')  
 
     start_date = datetime.strptime(start_date, "%Y-%m-%d")
     end_date = datetime.strptime(end_date, "%Y-%m-%d")
-
+    
+    
     current_date = start_date
     while current_date <= end_date:
         day_name = current_date.strftime("%A")
         for day in data:
             if day["day"] == day_name:
                 for class_info in day["data"]:
-                    if (
-                        class_info["start"]
-                        and class_info["end"]
-                        and class_info["value"]
-                    ):
+                    if all(class_info.get(key) for key in ['start', 'end', 'value']):
+                        event = Event()
                         start_time = datetime.strptime(class_info["start"], "%H:%M")
                         end_time = datetime.strptime(class_info["end"], "%H:%M")
-                        event = Event()
+                        
+                        event_start = current_date.replace(
+                            hour=start_time.hour, 
+                            minute=start_time.minute
+                        )
+                        event_end = current_date.replace(
+                            hour=end_time.hour, 
+                            minute=end_time.minute
+                        )
+                        
                         event.add("summary", class_info["value"].replace("\n", " "))
-                        event.add(
-                            "dtstart",
-                            current_date.replace(
-                                hour=start_time.hour, minute=start_time.minute
-                            ),
-                        )
-                        event.add(
-                            "dtend",
-                            current_date.replace(
-                                hour=end_time.hour, minute=end_time.minute
-                            ),
-                        )
+                        event.add("dtstart", event_start)
+                        event.add("dtend", event_end)
+                        event.add('dtstamp', datetime.now())
+                        
                         cal.add_component(event)
         current_date += timedelta(days=1)
 
