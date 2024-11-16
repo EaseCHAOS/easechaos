@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7.2.4-alpine3.19
+    container_name: redis
+    ports:
+      - "$REDIS_PORT:$REDIS_PORT"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: easechaos
+    command: /bin/sh -c "uvicorn app:app --host 0.0.0.0 --port $PORT"
+    volumes:
+      - ./:/app
+    ports:
+      - "$PORT:$PORT"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - PORT=${PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+
+volumes:
+  redis-data:
