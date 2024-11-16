@@ -3,7 +3,7 @@ import os
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from extract.extract_table import get_time_table, generate_calendar
+from api.extract.extract_table import get_time_table, generate_calendar
 import json
 from pathlib import Path
 import pandas as pd

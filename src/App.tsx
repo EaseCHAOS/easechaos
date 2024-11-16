@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Calendar from './components/Calendar';
 import { WeekSchedule } from './types';
-import { mockSchedule } from './mockData';
 
 function App() {
   const [schedule, setSchedule] = useState<WeekSchedule>([]);
@@ -9,12 +8,17 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Try to fetch from API first
-    fetch('api/v1/get_time_table')
+    fetch('http://0.0.0.0:80/api/v1/get_time_table', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filename: 'Draft_2',
+        class_pattern: 'CE 3'
+      })
+    })
       .then(response => {
-        if (!response.ok) {
-          throw new Error('API not available');
-        }
         return response.json();
       })
       .then(data => {
@@ -22,8 +26,7 @@ function App() {
         setLoading(false);
       })
       .catch(() => {
-        // Silently fall back to mock data without showing error
-        setSchedule(mockSchedule);
+        setError('API not available');
         setLoading(false);
       });
   }, []);

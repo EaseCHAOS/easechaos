@@ -16,24 +16,39 @@ services:
       timeout: 5s
       retries: 5
       
-  app:
+  api:
     build: 
       context: .
       dockerfile: Dockerfile.dev
-    container_name: easechaos
-    command: /bin/sh -c "uvicorn app:app --host 0.0.0.0 --port $PORT"
+    container_name: easechaos-api
+    command: /bin/sh -c "uvicorn app:app --host 0.0.0.0 --port $PORT --reload"
     volumes:
       - ./:/app
     ports:
       - "$PORT:$PORT"
-    depends_on:
-      redis:
-        condition: service_healthy
     environment:
       - PORT=${PORT}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.dev
+    container_name: easechaos-frontend
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:${PORT}
+    depends_on:
+      - api
 
 volumes:
   redis-data:

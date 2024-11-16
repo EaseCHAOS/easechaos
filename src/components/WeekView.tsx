@@ -6,10 +6,41 @@ interface WeekViewProps {
   schedule: WeekSchedule;
 }
 
-const timeSlots = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
+const timeSlots = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 19 (7 PM)
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
+function convertTo24Hour(timeStr: string): number {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  if (hours < 7) { // If hour is less than 7, it's PM
+    return hours + 12 + (minutes || 0) / 60;
+  }
+  return hours + (minutes || 0) / 60;
+}
+
 export default function WeekView({ schedule }: WeekViewProps) {
+  const processedSchedule = schedule.map(day => ({
+    ...day,
+    events: day.data
+      .filter((slot): slot is typeof slot & { value: string } => Boolean(slot.value))
+      .map(slot => {
+        // Convert times to 24-hour format for positioning
+        const startTime = convertTo24Hour(slot.start);
+        const endTime = convertTo24Hour(slot.end);
+        
+        const startPosition = (startTime - 7) / (timeSlots.length - 1) * 100;
+        const endPosition = (endTime - 7) / (timeSlots.length - 1) * 100;
+        
+        return {
+          start: slot.start,
+          end: slot.end,
+          value: slot.value,
+          startPosition,
+          duration: endPosition - startPosition
+        };
+      })
+      .sort((a, b) => a.startPosition - b.startPosition)
+  }));
+
   return (
     <div className="relative">
       <div className="overflow-x-auto">
@@ -45,7 +76,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
 
               {/* Days */}
               {days.map((day) => {
-                const daySchedule = schedule.find((s) => s.day === day);
+                const daySchedule = processedSchedule.find((s) => s.day === day);
 
                 return (
                   <div key={day} className="relative border-l border-gray-200">
@@ -63,18 +94,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
                     </div>
 
                     {/* Events */}
-                    {daySchedule?.data.map((slot, index) => {
-                      if (!slot.value) return null;
-
-                      const startHour = parseInt(slot.start.split(':')[0]);
-                      const startMinute = parseInt(slot.start.split(':')[1]);
-                      const endHour = parseInt(slot.end.split(':')[0]);
-                      const endMinute = parseInt(slot.end.split(':')[1]);
-
-                      const totalHours = timeSlots.length - 1;
-                      const startPosition = ((startHour - 7) + startMinute / 60) / totalHours * 100;
-                      const duration = (endHour - startHour + (endMinute - startMinute) / 60) / totalHours * 100;
-
+                    {daySchedule?.events.map((slot, index) => {
                       return (
                         <div
                           key={index}
@@ -84,8 +104,8 @@ export default function WeekView({ schedule }: WeekViewProps) {
                             "hover:bg-blue-200 transition-colors cursor-pointer"
                           )}
                           style={{
-                            top: `${startPosition}%`,
-                            height: `${duration}%`,
+                            top: `${slot.startPosition}%`,
+                            height: `${slot.duration}%`,
                             minHeight: '30px'
                           }}
                         >

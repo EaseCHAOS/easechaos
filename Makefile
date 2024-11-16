@@ -1,7 +1,22 @@
-.PHONY: build up down clean test lint format
+.PHONY: run-backend run-frontend install build up down local clean test lint format
 
 DOCKER_COMPOSE_FILE=docker-compose.dev.yml
 VOLUMES=easechaose_redis-data
+
+install:
+	pip install -r requirements.txt
+	pnpm install
+
+run-backend:
+	python3 -m uvicorn app:app --reload
+
+run-frontend:
+	pnpm run dev
+
+local:
+	make install
+	make run-backend &
+	make run-frontend
 
 build:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) build

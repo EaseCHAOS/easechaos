@@ -17,6 +17,14 @@ interface PositionedEvent {
   isOverlapping?: boolean;
 }
 
+function convertTo24Hour(timeStr: string): number {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  if (hours < 7) { // If hour is less than 7, it's PM
+    return hours + 12 + (minutes || 0) / 60;
+  }
+  return hours + (minutes || 0) / 60;
+}
+
 export default function DayView({ schedule }: DayViewProps) {
   if (!schedule) {
     return (
@@ -30,16 +38,12 @@ export default function DayView({ schedule }: DayViewProps) {
   const processedEvents: PositionedEvent[] = schedule.data
     .filter((slot): slot is typeof slot & { value: string } => Boolean(slot.value))
     .map(slot => {
-      const startHour = parseInt(slot.start.split(':')[0]);
-      const startMinute = parseInt(slot.start.split(':')[1]);
-      const endHour = parseInt(slot.end.split(':')[0]);
-      const endMinute = parseInt(slot.end.split(':')[1]);
-
-      const startIndex = timeSlots.findIndex(hour => hour === startHour);
-      const endIndex = timeSlots.findIndex(hour => hour === endHour);
+      // Convert times to 24-hour format for positioning
+      const startTime = convertTo24Hour(slot.start);
+      const endTime = convertTo24Hour(slot.end);
       
-      const startPosition = (startIndex + startMinute / 60) / (timeSlots.length - 1) * 100;
-      const endPosition = (endIndex + endMinute / 60) / (timeSlots.length - 1) * 100;
+      const startPosition = (startTime - 7) / (timeSlots.length - 1) * 100;
+      const endPosition = (endTime - 7) / (timeSlots.length - 1) * 100;
       
       return {
         start: slot.start,
