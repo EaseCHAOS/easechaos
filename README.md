@@ -50,3 +50,9 @@ NB: This project is still under development.
 
 <img src="docs/screenshot.jpeg" width="800">
 <img src="docs/screenshot1.jpeg" width="800">
+
+## Contributors
+
+- [@Aaron Ontonyin](https://github.com/Aaron-Ontoyin)
+- [@Kekeli Dompeh](https://github.com/db-keli)
+- [@Neil Ohene](https://github.com/0xDVC)
