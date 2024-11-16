@@ -147,15 +147,15 @@ export default function DayView({ schedule }: DayViewProps) {
 
   return (
     <div className="mx-auto max-w-4xl w-full">
-      <div className="grid grid-cols-[100px_1fr] gap-4 h-[720px] overflow-y-auto relative pt-4 pb-6">
+      <div className="grid grid-cols-[60px_1fr] sm:grid-cols-[100px_1fr] gap-4 h-[720px] overflow-y-auto relative pt-4 pb-6">
         <div className="sticky left-0 h-full">
           {timeSlots.map((time, index) => (
             <div
               key={time}
-              className="absolute text-sm text-gray-700"
+              className="absolute text-xs sm:text-sm text-gray-700"
               style={{
                 top: `${(index / (timeSlots.length - 1)) * 100}%`,
-                right: '1rem',
+                right: '0.5rem sm:1rem',
                 transform: 'translateY(-50%)'
               }}
             >
