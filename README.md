@@ -1,5 +1,5 @@
-<div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
-  <h1>easeCHAOS</h1>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <h1 style="margin-right: 10px;">easeCHAOS</h1>
   <img src="assets/easechaos.png" alt="easeCHAOS" width="100" height="100">
 </div>
 
