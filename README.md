@@ -1,5 +1,5 @@
 <div style="display: flex; align-items: center; justify-content: center;">
-  <img src="src/assets/easechaos.png" alt="easeCHAOS" width="200">
+  <img src="assets/easechaos.png" alt="easeCHAOS" width="200">
   <h1>easeCHAOS</h1>
 </div>
 
@@ -49,8 +49,8 @@ NB: This project is still under development.
 
 ### Current Progress
 
-<img src="docs/screenshot.jpeg" width="800">
-<img src="docs/screenshot1.jpeg" width="800">
+<img src="docs/screenshot.png" width="800">
+<img src="docs/screenshot1.png" width="800">
 
 ## Contributors
 
