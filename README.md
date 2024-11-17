@@ -13,7 +13,7 @@ easeCHAOS is a modern, user-friendly timetable viewer designed specifically for 
 - **Class-Specific**: View only your class's schedule, filtered and clean
 - **Modern Interface**: Intuitive weekly and daily views
 - **Mobile Friendly**: Access your schedule on any device
-- **Export Options**: Download your schedule in Excel or iCalendar format
+- **Download Options**: Download your schedule in pdf, image, calendar file(ics), and excel format.
 
 ## Current Progress
 
