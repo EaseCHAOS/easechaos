@@ -1,4 +1,5 @@
-<div align="center">
+<div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px;">
+  <img src="docs/easechaos.png" alt="easeCHAOS" width="200">
   <h1>easeCHAOS</h1>
 </div>
 
