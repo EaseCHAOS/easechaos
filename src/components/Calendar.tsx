@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { DayPicker } from 'react-day-picker';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutGrid, Calendar as CalendarDayIcon } from 'lucide-react';
@@ -43,9 +43,57 @@ export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const datePickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
+        setShowDatePicker(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (viewMode !== 'day') return;
+      
+      if (event.key === 'ArrowLeft' && selectedDate.getDay() !== 1) {
+        const newDate = new Date(selectedDate);
+        newDate.setDate(newDate.getDate() - 1);
+        setSelectedDate(newDate);
+      }
+      
+      if (event.key === 'ArrowRight' && selectedDate.getDay() !== 5) {
+        const newDate = new Date(selectedDate);
+        newDate.setDate(newDate.getDate() + 1);
+        setSelectedDate(newDate);
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [viewMode, selectedDate]);
 
   const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const currentDaySchedule = schedule.find(day => day.day === dayNames[selectedDate.getDay() - 1]);
+
+  const getWeekDates = () => {
+    const monday = new Date(selectedDate);
+    while (monday.getDay() !== 1) {
+      monday.setDate(monday.getDate() - 1);
+    }
+    const friday = new Date(monday);
+    friday.setDate(friday.getDate() + 4);
+    
+    return `${format(monday, 'MMMM d')} - ${format(friday, 'MMMM d, yyyy')}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -58,37 +106,45 @@ export default function Calendar() {
           {/* Header */}
           <div className="p-4 border-b flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold">Schedule</h1>
-              {viewMode === 'day' && (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowDatePicker(!showDatePicker)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100"
-                  >
-                    <CalendarIcon className="w-5 h-5" />
-                    <span>{format(selectedDate, 'MMMM d, yyyy')}</span>
-                  </button>
-                  {showDatePicker && (
-                    <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg z-50">
-                      <DayPicker
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => {
-                          if (date) {
-                            setSelectedDate(date);
-                            setShowDatePicker(false);
-                          }
-                        }}
-                        modifiers={{
-                          disabled: (date) => date.getDay() === 0 || date.getDay() === 6,
-                        }}
-                        showOutsideDays
-                        className="p-3"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+              <h1 className="text-2xl font-bold">
+                {viewMode === 'week' 
+                  ? "Week's Schedule" 
+                  : format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                    ? "Today"
+                    : format(selectedDate, 'EEEE')}
+              </h1>
+              <div className="relative">
+                <button
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100"
+                >
+                  <CalendarIcon className="w-5 h-5" />
+                  <span>
+                    {viewMode === 'week' 
+                      ? getWeekDates()
+                      : format(selectedDate, 'MMMM d, yyyy')}
+                  </span>
+                </button>
+                {showDatePicker && (
+                  <div ref={datePickerRef} className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg z-50">
+                    <DayPicker
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          setSelectedDate(date);
+                          setShowDatePicker(false);
+                        }
+                      }}
+                      modifiers={{
+                        disabled: (date) => date.getDay() === 0 || date.getDay() === 6,
+                      }}
+                      showOutsideDays
+                      className="p-3"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center bg-gray-100 rounded-lg p-1">

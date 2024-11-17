@@ -95,55 +95,47 @@ export default function DayView({ schedule }: DayViewProps) {
         duration,
         splitIndex: index,
         totalSplits: values.length,
-        continuationGroup: value.match(/CE \d[A-Z] \d{3}/)?.[0]
+        continuationGroup: value.match(/CE \d[A-Z] \d{3}(?:\s*\([^)]+\))?/)?.[0],
+        isOverlapping: false
       }));
-    })
-    .sort((a, b) => a.startPosition - b.startPosition);
-
-  let currentGroup: { [key: string]: PositionedEvent[] } = {};
-  processedEvents.forEach((event) => {
-    if (event.continuationGroup) {
-      if (!currentGroup[event.continuationGroup]) {
-        currentGroup[event.continuationGroup] = [];
-      }
-      currentGroup[event.continuationGroup].push(event);
-    }
-  });
-
-  const mergedEvents = processedEvents.reduce((acc: PositionedEvent[], event) => {
-    if (!event.continuationGroup || !currentGroup[event.continuationGroup]) {
-      acc.push(event);
-      return acc;
-    }
-
-    const group = currentGroup[event.continuationGroup];
-    if (group.length <= 1) {
-      acc.push(event);
-      return acc;
-    }
-
-    if (event === group[0]) {
-      const lastEvent = group[group.length - 1];
-      acc.push({
-        ...event,
-        end: lastEvent.end,
-        duration: ((convertTimeToNumber(lastEvent.end) - convertTimeToNumber(event.start)) / 13) * 100
-      });
-    }
-
-    return acc;
-  }, []);
+    });
 
   processedEvents.forEach((event, index) => {
     const overlappingEvents = processedEvents.filter((otherEvent, otherIndex) => {
       if (otherIndex === index) return false;
-      return !(
-        otherEvent.startPosition >= (event.startPosition + event.duration) ||
-        event.startPosition >= (otherEvent.startPosition + otherEvent.duration)
-      );
+      const sameTimeSlot = 
+        convertTimeToNumber(otherEvent.start) === convertTimeToNumber(event.start) &&
+        convertTimeToNumber(otherEvent.end) === convertTimeToNumber(event.end);
+      return sameTimeSlot;
     });
-    event.isOverlapping = overlappingEvents.length > 0;
+    
+    if (overlappingEvents.length > 0) {
+      event.isOverlapping = true;
+      event.totalSplits = overlappingEvents.length + 1;
+      event.splitIndex = overlappingEvents.findIndex(e => e.value > event.value) + 1;
+    }
   });
+
+  const mergedEvents = processedEvents.reduce((acc: PositionedEvent[], event) => {
+    if (!event.continuationGroup) {
+      acc.push(event);
+      return acc;
+    }
+
+    const previousEvent = acc.find(e => 
+      e.continuationGroup === event.continuationGroup && 
+      convertTimeToNumber(e.end) === convertTimeToNumber(event.start)
+    );
+
+    if (previousEvent) {
+      previousEvent.end = event.end;
+      previousEvent.duration = ((convertTimeToNumber(event.end) - convertTimeToNumber(previousEvent.start)) / 13) * 100;
+    } else {
+      acc.push(event);
+    }
+
+    return acc;
+  }, []);
 
   return (
     <div className="mx-auto max-w-4xl w-full">

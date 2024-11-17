@@ -21,7 +21,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-10 md:p-6">
       <div className="max-w-3xl w-full text-center space-y-12">
         {/* Hero Section */}
         <div className="space-y-6">
@@ -33,8 +33,8 @@ export default function LandingPage() {
           >
             Star us on GitHub <span className="ml-2">→</span>
           </a>
-          <div className="flex flex-row justify-center items-center">
-            <h1 className="text-6xl font-bold text-gray-900 tracking-tight">
+          <div className="flex flex-row justify-center items-center p-4">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 tracking-tight">
               EaseCHAOS
           </h1>
           <img src={"/assets/easechaos.png"} alt="EaseCHAOS" className="w-24 h-24"  />
@@ -43,13 +43,13 @@ export default function LandingPage() {
             Streamline your academic experience with effortless schedule management, 
             intuitive viewing, and seamless department integration.
           </p>
-          <button
+          {/* <button
             onClick={handleViewSchedule}
             disabled={!selectedDept || !selectedYear}
             className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
           >
             <span className="mr-2">✨</span> Get Started
-          </button>
+          </button> */}
         </div>
 
         {/* Selector Section */}

@@ -46,9 +46,18 @@ export default function WeekView({ schedule }: WeekViewProps) {
   const currentTimePosition = React.useMemo(() => {
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
-    const timeInHours = hours + minutes / 60;
-    const totalHours = 13; // 7 AM to 8 PM
-    return ((timeInHours - 7) / totalHours) * 100;
+    
+    // Convert to minutes since 7 AM
+    const startTimeInMinutes = 7 * 60;  // 7 AM in minutes
+    const endTimeInMinutes = 20 * 60;   // 8 PM in minutes
+    const currentTimeInMinutes = (hours * 60) + minutes;
+    const totalMinutes = endTimeInMinutes - startTimeInMinutes;
+    
+    // Calculate percentage position
+    const position = ((currentTimeInMinutes - startTimeInMinutes) / totalMinutes) * 100;
+    
+    // Clamp between 0 and 100
+    return Math.max(0, Math.min(position, 100));
   }, [currentTime]);
 
   const courseColorMap = useMemo(() => {
@@ -70,19 +79,39 @@ export default function WeekView({ schedule }: WeekViewProps) {
     ...day,
     events: day.data
       .filter((slot): slot is typeof slot & { value: string } => Boolean(slot.value))
+      .reduce((acc, current) => {
+        const previousEvent = acc[acc.length - 1];
+        
+        const isSameCourse = previousEvent?.value === current.value;
+        const isSequential = previousEvent?.end === current.start || 
+                           (previousEvent?.end === "12:00" && current.start === "12:30");
+
+        if (isSameCourse && isSequential) {
+          // Merge the events by extending the previous event's end time
+          return [
+            ...acc.slice(0, -1),
+            {
+              ...previousEvent,
+              end: current.end
+            }
+          ];
+        }
+
+        return [...acc, current];
+      }, [] as typeof day.data)
       .flatMap(slot => {
+        if (!slot.value) return [];
+        
         const startTime = convertTimeToNumber(slot.start);
         const endTime = convertTimeToNumber(slot.end);
         
         const totalSlots = timeSlots.length;
-        
         const startSlot = (startTime - 7) * 2;
         const endSlot = (endTime - 7) * 2;
         
         const startPosition = (startSlot / totalSlots) * 100;
         const duration = ((endSlot - startSlot) / totalSlots) * 100;
         
-        // Split the value if it contains \n
         const values = splitEventValue(slot.value);
         
         return values.map((value, index) => ({
@@ -115,11 +144,11 @@ export default function WeekView({ schedule }: WeekViewProps) {
           </div>
 
           {/* Days and events grid */}
-          <div className="space-y-1 relative">
+          <div className="space-y-1 relative bg-white z-[100]">
             <div 
-              className="absolute h-full w-[2px] bg-gray-500 z-20"
+              className="absolute h-full w-[2px] bg-gray-500 z-[50]"
               style={{ 
-                left: `${currentTimePosition}%`,
+                left: `${currentTimePosition + 6}%`,
                 transform: 'translateX(-50%)'
               }}
             >
