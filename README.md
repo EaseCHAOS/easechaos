@@ -32,6 +32,20 @@ The application currently features:
 - Redis
 - Docker (Optional)
 
+## Tech Stack
+
+### Frontend
+- React.js
+- TailwindCSS
+- TypeScript
+- Vite
+
+### Backend
+- FastAPI (Python)
+- Redis
+- Docker
+
+
 ### Installation (Local without Docker)
 
 1. Clone the repository
