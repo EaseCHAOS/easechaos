@@ -2,6 +2,12 @@ import { toPng } from "html-to-image";
 import html2pdf from "html2pdf.js";
 import { saveAs } from 'file-saver';
 
+type ElementStyles = {
+  zoom: string;
+  overflowX: string;
+  overflowY: string;
+};
+
 function prepareElement(node: HTMLElement) {
   const timeIndicator = node.querySelector(".time-indicator") as HTMLElement;
   const originalStyles = {
@@ -21,7 +27,7 @@ function prepareElement(node: HTMLElement) {
   return { timeIndicator, originalStyles };
 }
 
-function restoreElement(node: HTMLElement, timeIndicator: HTMLElement | null, originalStyles: any) {
+function restoreElement(node: HTMLElement, timeIndicator: HTMLElement | null, originalStyles: ElementStyles) {
   if (timeIndicator) {
     timeIndicator.style.display = "";
   }
@@ -82,34 +88,45 @@ function createCroppedCanvas(canvas: HTMLCanvasElement, boundaries: ReturnType<t
 
 
 function downloadFile(content: string | Blob, fileName: string, mimeType: string) {
-  // Method 1: Using FileSaver for desktop browsers
-  if (!(/iPad|iPhone|iPod/.test(navigator.userAgent))) {
-    const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
-    saveAs(blob, fileName);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  // For iOS devices, we need to use a data URL approach
+  if (isIOS) {
+    const link = document.createElement('a');
+    link.download = fileName;
+    
+    if (content instanceof Blob) {
+      // Convert Blob to data URL for iOS
+      const reader = new FileReader();
+      reader.onload = function() {
+        link.href = reader.result as string;
+        // iOS requires the link to be in the DOM and clicked programmatically
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
+      };
+      reader.readAsDataURL(content);
+    } else {
+      // If it's already a data URL
+      link.href = content;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
+    }
     return;
   }
 
-  // Method 3: Fallback for iOS devices
-  const link = document.createElement('a');
-  link.download = fileName;
-  
-  if (content instanceof Blob) {
-    link.href = URL.createObjectURL(content);
-  } else {
-    link.href = content;
-  }
-  
-  // iOS requires the link to be in the DOM
-  document.body.appendChild(link);
-  link.click();
-  
-  // Cleanup
-  setTimeout(() => {
-    document.body.removeChild(link);
-    if (link.href.startsWith('blob:')) {
-      URL.revokeObjectURL(link.href);
-    }
-  }, 100);
+  // For non-iOS devices, use FileSaver
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+  saveAs(blob, fileName);
 }
 
 export function downloadElementAsImage(elementId: string, fileName: string) {
@@ -171,12 +188,12 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
 
   const { timeIndicator, originalStyles } = prepareElement(node as HTMLElement);
 
-  // Adjust dimensions based on device
+  // Reduced dimensions and pixel ratio
   const isMobile = window.innerWidth <= 768;
   const config = {
-    width: isMobile ? 1200 : 1920,
-    height: isMobile ? 400 : 600,
-    pixelRatio: isMobile ? 2 : 4,
+    width: isMobile ? 800 : 1200,
+    height: isMobile ? 300 : 400,
+    pixelRatio: isMobile ? 1.5 : 2,  // Reduced from 2/4 to 1.5/2
   };
 
   toPng(node, {
@@ -185,7 +202,7 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
     height: config.height,
     backgroundColor: "white",
     style: { margin: "0", padding: "0" },
-    quality: 1.0,
+    quality: 0.95,  // Slightly reduced quality
     pixelRatio: config.pixelRatio,
   })
     .then((dataUrl) => {
@@ -207,9 +224,9 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
         const opt = {
           margin: 0,
           filename: fileName,
-          image: { type: 'png', quality: 1.0 },
+          image: { type: 'png', quality: 1 },  // Slightly reduced quality
           html2canvas: { 
-            scale: 2,
+            scale: 1.5,  // Reduced from 2 to 1.5
             useCORS: true,
             allowTaint: true
           },
@@ -217,7 +234,8 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
             unit: 'px',
             format: [width, height + 40],
             orientation: width > (height + 40) ? 'landscape' : 'portrait',
-            hotfixes: ['px_scaling']
+            hotfixes: ['px_scaling'],
+            compress: true  // Added compression
           },
           forceDownload: true,
           outputPdf: 'save'
@@ -233,7 +251,7 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
             .then((pdfData: string) => {
               downloadFile(pdfData, fileName, 'application/pdf');
             })
-            .catch((error: any) => {
+            .catch((error: Error) => {
               console.error("Failed to download PDF:", error);
               alert("Failed to download PDF. Please try again.");
             });
@@ -243,7 +261,7 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
             .set(opt)
             .from(croppedCanvas)
             .save()
-            .catch((error: any) => {
+            .catch((error: Error) => {
               console.error("Failed to download PDF:", error);
               alert("Failed to download PDF. Please try again.");
             });
