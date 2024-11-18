@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { DayPicker } from 'react-day-picker';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutGrid, Calendar as CalendarDayIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutGrid, Calendar as CalendarDayIcon, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 import { WeekSchedule } from '../types';
 import WeekView from './WeekView';
@@ -113,6 +113,12 @@ export default function Calendar() {
           <div className="p-4 border-b">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-col items-center sm:items-start sm:flex-row gap-4">
+                <a 
+                  href="/"
+                  className="p-2 rounded-md hover:bg-gray-100 mr-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </a>
                 <h1 className="text-2xl font-bold text-center sm:text-left">
                   {viewMode === 'week'
                     ? "Week's Schedule"
