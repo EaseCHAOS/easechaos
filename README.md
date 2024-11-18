@@ -20,7 +20,7 @@ easeCHAOS is a modern, user-friendly timetable viewer designed specifically for 
 The application currently features:
 - ✅ Weekly view with all classes
 - ✅ Daily detailed view
-- ✅ Class filtering system (ui not done)
+- ✅ Class filtering system
 - ✅ Responsive design
 - ✅ Calendar export functionality (ui not done)
 
