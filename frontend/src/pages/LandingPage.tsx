@@ -17,9 +17,10 @@ export default function LandingPage() {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center p-4 md:p-6 mx-auto">
-            <div className=" max-w-4xl w-full text-center space-y-6">
+            <div className="relative max-w-4xl w-full text-center space-y-6">
+                <div className="absolute top-0 w-full h-[50vh] sm:h-[60vh] bg-[url('../assets/pattern.svg')] bg-cover bg-center opacity-10 bg-blend-darken" />
                 {/* Hero Section */}
-                <div className="space-y-6">
+                <div className="space-y-6 text-center">
                     <a
                         href="https://github.com/Easechaos/easechaos"
                         target="_blank"
@@ -27,9 +28,9 @@ export default function LandingPage() {
                         className="group inline-flex items-center border border-gray-300 px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600 hover:bg-gray-200 transition-colors duration-200"
                     >
                         Star us on GitHub
-                        <span className="ml-2 group-hover:hidden">→</span>
+                        <span className="ml-2 group-hover:hidden z-10">→</span>
                         <svg
-                            className="ml-2 w-4 h-4 hidden group-hover:block"
+                            className="ml-2 w-4 h-4 hidden group-hover:block z-10"
                             fill="none"
                             strokeWidth={2}
                             stroke="currentColor"
@@ -46,10 +47,10 @@ export default function LandingPage() {
                         </svg>
                     </a>
                     <div className="flex flex-row justify-center items-center p-4">
-                        <h1 className="mt-4 inline-block text-wrap bg-gradient-to-b from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent text-4xl font-semibold md:text-5xl xl:text-6xl xl:[line-height:1.125]">
+                        <h1 className="mt-4 inline-block text-wrap bg-gradient-to-b from-gray-800 via-gray-700 to-gray-500 bg-clip-text text-transparent text-4xl font-semibold md:text-5xl xl:text-6xl xl:[line-height:1.125]">
                             EaseCHAOS
                         </h1>
-                        <img src={"../assets/easechaos.png"} alt="EaseCHAOS" className="w-15 h-10" />
+                        <img src={"/assets/easechaos.png"} alt="EaseCHAOS" className="w-15 h-10" />
 
                     </div>
 
