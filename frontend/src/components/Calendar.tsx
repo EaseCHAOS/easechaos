@@ -53,10 +53,7 @@ export default function Calendar() {
       });
   }, [dept, year]); // Dependencies array includes dept and year
 
-  // Show loading state while fetching
-  if (!schedule.length && !error) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
+ 
 
   // Show error state if there's an error
   if (error) {
