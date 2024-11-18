@@ -10,9 +10,6 @@ import 'react-day-picker/dist/style.css';
 import { useParams } from 'react-router-dom';
 import { downloadElementAsImage, downloadElementAsPDF } from '../utils/downloadUtils';
 
-// interface CalendarProps {
-//   schedule: WeekSchedule;
-// }
 
 type ViewMode = 'day' | 'week';
 
@@ -21,15 +18,15 @@ export default function Calendar() {
   const [error, setError] = useState<string | null>(null);
   const { dept, year } = useParams();
 
-  useEffect(() => {
-    setError(null);
-    
-    if (!dept || !year) {
-      setError('Missing department or year');
-      return;
+  const fetchSchedule = async (dept: string, year: string) => {
+    const cacheKey = `schedule:${dept}:${year}`;
+    const cachedData = localStorage.getItem(cacheKey);
+
+    if (cachedData) {
+      return JSON.parse(cachedData);
     }
 
-    fetch(import.meta.env.VITE_API_URL + '/get_time_table', {
+    const response = await fetch(import.meta.env.VITE_API_URL + '/get_time_table', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -38,24 +35,38 @@ export default function Calendar() {
         filename: 'Draft_2',
         class_pattern: `${dept} ${year}`
       })
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch schedule');
-        }
-        return response.json();
-      })
-      .then(data => {
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch schedule');
+    }
+
+    const data = await response.json();
+    localStorage.setItem(cacheKey, JSON.stringify(data));
+    return data;
+  };
+
+  
+  useEffect(() => {
+    setError(null);
+
+    if (!dept || !year) {
+      setError('Missing department or year');
+      return;
+    }
+
+    const loadSchedule = async () => {
+      try {
+        const data = await fetchSchedule(dept, year);
         setSchedule(data);
-      })
-      .catch((err) => {
-        setError(err.message || 'API not available');
-      });
-  }, [dept, year]); // Dependencies array includes dept and year
+      } catch (err) {
+        setError((err as Error).message || 'Failed to load schedule');
+      }
+    };
 
- 
+    loadSchedule();
+  }, [dept, year]);
 
-  // Show error state if there's an error
   if (error) {
     return <div className="flex items-center justify-center h-screen text-red-500">{error}</div>;
   }
@@ -131,7 +142,7 @@ export default function Calendar() {
           <div className="p-4 border-b">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-col items-center sm:items-start sm:flex-row gap-4">
-                <a 
+                <a
                   href="/"
                   className="border-2 border-[#1B1B1B] p-2 rounded-md hover:bg-gray-100 mr-2"
                 >
@@ -154,8 +165,8 @@ export default function Calendar() {
                       <span>{format(selectedDate, 'MMM d, yyyy')}</span>
                     </button>
                     {showDatePicker && (
-                      <div 
-                        ref={datePickerRef} 
+                      <div
+                        ref={datePickerRef}
                         className="absolute left-1/2 sm:left-0 -translate-x-1/2 sm:translate-x-0 top-full mt-2 bg-white rounded-lg shadow-lg z-[1100]"
                       >
                         <DayPicker
@@ -178,7 +189,7 @@ export default function Calendar() {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex items-center justify-center w-full sm:w-auto gap-4">
                 {viewMode === 'week' && (
                   <div className='relative'>
@@ -217,7 +228,7 @@ export default function Calendar() {
                     )}
                   </div>
                 )}
-                
+
                 <div className="flex items-center bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('week')}
@@ -238,7 +249,7 @@ export default function Calendar() {
                     <CalendarDayIcon className="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 {viewMode === 'day' && (
                   <div className="flex items-center space-x-2 shrink-0">
                     <button

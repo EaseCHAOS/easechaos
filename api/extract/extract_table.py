@@ -176,7 +176,7 @@ def generate_calendar(timetable, start_date, end_date):
         end_date (str): The end date of the calendar in the format 'YYYY-MM-DD'.
 
     Returns:
-        None
+        bytes
 
     This function generates a calendar of class events based on the provided timetable within the specified date range.
     It iterates over the timetable data, checks if the day matches the current date, and adds class events to the calendar.
