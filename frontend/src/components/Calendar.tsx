@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { format } from 'date-fns';
 import { DayPicker } from 'react-day-picker';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutGrid, Calendar as CalendarDayIcon, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 import { WeekSchedule } from '../types';
-import WeekView from './WeekView';
-import DayView from './DayView';
 import 'react-day-picker/dist/style.css';
 import { useParams } from 'react-router-dom';
 import { downloadElementAsImage, downloadElementAsPDF } from '../utils/downloadUtils';
@@ -13,10 +11,21 @@ import { downloadElementAsImage, downloadElementAsPDF } from '../utils/downloadU
 
 type ViewMode = 'day' | 'week';
 
+// Replace direct imports with lazy imports
+const WeekView = lazy(() => import('./WeekView'));
+const DayView = lazy(() => import('./DayView'));
+
 export default function Calendar() {
   const [schedule, setSchedule] = useState<WeekSchedule>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const datePickerRef = useRef<HTMLDivElement>(null);
+  const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
+  const downloadDropdownRef = useRef<HTMLDivElement>(null);
   const { dept, year } = useParams();
+
 
   const fetchSchedule = async (dept: string, year: string) => {
     const cacheKey = `schedule:${dept}:${year}`;
@@ -67,17 +76,6 @@ export default function Calendar() {
     loadSchedule();
   }, [dept, year]);
 
-  if (error) {
-    return <div className="flex items-center justify-center h-screen text-red-500">{error}</div>;
-  }
-
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('week');
-  const datePickerRef = useRef<HTMLDivElement>(null);
-  const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
-  const downloadDropdownRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
@@ -116,6 +114,10 @@ export default function Calendar() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [viewMode, selectedDate]);
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-red-500">{error}</div>;
+  }
 
   const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const currentDaySchedule = schedule.find(day => day.day === dayNames[selectedDate.getDay() - 1]);
@@ -270,13 +272,15 @@ export default function Calendar() {
             </div>
           </div>
 
-          {/* Calendar Grid */}
+          {/* Calendar Grid - Wrap with Suspense */}
           <div className="overflow-auto max-9xl px-4">
-            {viewMode === 'week' ? (
-              <WeekView schedule={schedule} />
-            ) : (
-              <DayView schedule={currentDaySchedule} />
-            )}
+            <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
+              {viewMode === 'week' ? (
+                <WeekView schedule={schedule} />
+              ) : (
+                <DayView schedule={currentDaySchedule} />
+              )}
+            </Suspense>
           </div>
         </div>
       </div>
