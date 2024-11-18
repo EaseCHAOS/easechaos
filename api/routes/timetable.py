@@ -35,11 +35,7 @@ class TimeTableRequest(BaseModel):
     """
 
     filename: str
-    class_pattern: str
-
-def get_cache_key(filename: str, class_pattern: str) -> str:
-    """Generate a consistent cache key."""
-    return f"timetable:{filename}:{class_pattern}"
+    class_pattern: str   
 
 def get_json_table(request: TimeTableRequest):
     """
@@ -51,15 +47,14 @@ def get_json_table(request: TimeTableRequest):
     Returns:
     - dict: a dictionary containing the table in JSON format
     """
-    cache_key = get_cache_key(request.filename, request.class_pattern)
-    table = get_table_from_cache(cache_key)
+    table = get_table_from_cache(request.filename, request.class_pattern)
 
     if table is None:
         filename = os.path.join(DRAFTS_FOLDER, request.filename)
         table = get_time_table(filename, request.class_pattern).to_json(
             orient="records"
         )
-        add_table_to_cache(cache_key, table)
+        add_table_to_cache(table, request.filename, request.class_pattern)
 
     return json.loads(table)
 

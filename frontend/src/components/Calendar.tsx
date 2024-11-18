@@ -120,21 +120,11 @@ export default function Calendar() {
   const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const currentDaySchedule = schedule.find(day => day.day === dayNames[selectedDate.getDay() - 1]);
 
-  const getWeekDates = () => {
-    const monday = new Date(selectedDate);
-    while (monday.getDay() !== 1) {
-      monday.setDate(monday.getDate() - 1);
-    }
-    const friday = new Date(monday);
-    friday.setDate(friday.getDate() + 4);
-
-    return `${format(monday, 'MMM d')} - ${format(friday, 'MMM d, yyyy')}`;
-  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="h-screen bg-gray-50 p-4">
       <div className={clsx(
-        "h-full my-auto mx-auto",
+        "h-screen mx-auto",
         viewMode === 'week' ? "max-w-12xl" : "max-w-4xl"
       )}>
         <div className="bg-white rounded-lg shadow-lg">

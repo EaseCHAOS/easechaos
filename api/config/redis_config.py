@@ -40,10 +40,8 @@ def get_redis_connection():
 r = get_redis_connection()
 
 def create_cache_key_from_parameters(filename: str, class_pattern: str) -> str:
-    filename = filename.split(".")[0]  # DRAFT_4
-    class_pattern = class_pattern.replace(" ", "")  # EL3
-
-    return f"{filename}-{class_pattern}"
+    """Generate a consistent cache key."""     
+    return f"{filename}-{class_pattern.replace(' ', '')}"
 
 
 def get_table_from_cache(filename: str, class_pattern: str) -> str | None:

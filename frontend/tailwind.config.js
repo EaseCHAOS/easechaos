@@ -3,17 +3,10 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
-      // Remove these entries
-      keyframes: {
-        trace: {
-          // ... trace keyframes
-        }
+      gridTemplateColumns: {
+        '25': 'repeat(25, minmax(0, 1fr))',
       },
-      animation: {
-        'trace': 'trace 4s linear infinite',
-      }
-      // Keep any other config entries you have
-    }
+    },
   },
   plugins: [],
 };

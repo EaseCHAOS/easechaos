@@ -136,26 +136,31 @@ export default function WeekView({ schedule }: WeekViewProps) {
   }));
 
   return (
-    <div className="relative w-full h-[700px]">
-      
-      <div id="week-schedule" className="overflow-x-auto bg-white">
-        <div className="min-w-[2000px] pb-2">
-          <div className="grid grid-cols-[100px_repeat(27,1fr)] mb-2 sticky top-0 bg-white z-10 pb-2 h-full">
-            <div className="font-medium text-gray-700 bg-white sticky min-w-[100px] right-0 flex justify-end z-[100]" />
-            {timeSlots.map((slot, index) => (
-              <div
-                key={index}
-                className="text-center font-medium pt-2 text-gray-700 text-xs whitespace-nowrap -ml-[50%]"
-              >
-                {`${slot.hour}:${slot.minute}`}
-              </div>
-            ))}
+    <div className="relative w-full h-[calc(100vh-12rem)]">
+      <div id="week-schedule" className="h-full overflow-x-auto bg-white">
+        <div className="min-w-[1200px] md:min-w-screen pb-2">
+          <div className="grid grid-cols-[45px_1fr] sticky top-0 bg-white z-10 py-2">
+            <div className="h-4"/>
+            <div className="grid grid-cols-25 relative pl-[3.7%]">
+              {timeSlots.map((slot, index) => (
+                <div
+                  key={index}
+                  className="text-center font-medium text-gray-700 text-xs whitespace-nowrap absolute ml-[20px]"
+                  style={{ 
+                    left: `${(index / 27) * 100}%`,
+                    transform: 'translateX(-50%)'
+                  }}
+                >
+                  {`${slot.hour}:${slot.minute}`}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Days and events grid */}
-          <div className="space-y-[0.08rem] relative bg-white z-[100]">
+          <div className="space-y-[0.08rem] relative bg-white z-[100] h-full">
             <div
-              className="absolute h-full w-[2px] bg-gray-500 z-[50] time-indicator"
+              className="absolute h-full w-[2px] bg-gray-500 z-[50] time-indicator ml-[20px]"
               style={{
                 left: `${currentTimePosition}%`,
                 transform: 'translateX(-50%)'
@@ -171,13 +176,13 @@ export default function WeekView({ schedule }: WeekViewProps) {
               const daySchedule = processedSchedule.find((s) => s.day === day);
 
               return (
-                <div key={day} className="grid grid-cols-[37px_1fr] sm:grid-cols-[45px_1fr] gap-2">
+                <div key={day} className="grid grid-cols-[37px_1fr] sm:grid-cols-[45px_1fr] gap-2 h-[calc((100vh-16rem)/5)]">
                   <div className="font-medium bg-white text-gray-700 text-[14px] py-2 sticky left-0 flex z-[100]">
                     {dayAbbreviations[day]}
                   </div>
 
                   {/* time slots and events */}
-                  <div className="relative h-28 bg-gray-50 rounded-lg">
+                  <div className="relative h-full bg-gray-50 rounded-lg">
                     {/* time boundary lines */}
                     <div className="absolute inset-0 grid grid-cols-[repeat(27,1fr)] pointer-events-none">
                       {timeSlots.map((_, index) => (
