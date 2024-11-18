@@ -22,6 +22,13 @@ export default function Calendar() {
   const { dept, year } = useParams();
 
   useEffect(() => {
+    setError(null);
+    
+    if (!dept || !year) {
+      setError('Missing department or year');
+      return;
+    }
+
     fetch(import.meta.env.VITE_API_URL + '/get_time_table', {
       method: 'POST',
       headers: {
@@ -32,14 +39,29 @@ export default function Calendar() {
         class_pattern: `${dept} ${year}`
       })
     })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch schedule');
+        }
+        return response.json();
+      })
       .then(data => {
         setSchedule(data);
       })
-      .catch(() => {
-        setError('API not available');
+      .catch((err) => {
+        setError(err.message || 'API not available');
       });
-  }, [dept, year]);
+  }, [dept, year]); // Dependencies array includes dept and year
+
+  // Show loading state while fetching
+  if (!schedule.length && !error) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  // Show error state if there's an error
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-red-500">{error}</div>;
+  }
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -103,9 +125,8 @@ export default function Calendar() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
-      {error && <div className="text-red-500 mb-4">{error}</div>}
       <div className={clsx(
-        "max-h-[750px] my-auto mx-auto",
+        "h-full my-auto mx-auto",
         viewMode === 'week' ? "max-w-12xl" : "max-w-4xl"
       )}>
         <div className="bg-white rounded-lg shadow-lg">
@@ -115,7 +136,7 @@ export default function Calendar() {
               <div className="flex flex-col items-center sm:items-start sm:flex-row gap-4">
                 <a 
                   href="/"
-                  className="p-2 rounded-md hover:bg-gray-100 mr-2"
+                  className="border-2 border-[#1B1B1B] p-2 rounded-md hover:bg-gray-100 mr-2"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </a>
@@ -126,41 +147,39 @@ export default function Calendar() {
                       ? "Today"
                       : format(selectedDate, 'EEEE')}
                 </h1>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowDatePicker(!showDatePicker)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100"
-                  >
-                    <CalendarIcon className="w-5 h-5" />
-                    <span>
-                      {viewMode === 'week'
-                        ? getWeekDates()
-                        : format(selectedDate, 'MMM d, yyyy')}
-                    </span>
-                  </button>
-                  {showDatePicker && (
-                    <div 
-                      ref={datePickerRef} 
-                      className="absolute left-1/2 sm:left-0 -translate-x-1/2 sm:translate-x-0 top-full mt-2 bg-white rounded-lg shadow-lg z-[1100]"
+                {viewMode === 'day' && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowDatePicker(!showDatePicker)}
+                      className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100"
                     >
-                      <DayPicker
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => {
-                          if (date) {
-                            setSelectedDate(date);
-                            setShowDatePicker(false);
-                          }
-                        }}
-                        modifiers={{
-                          disabled: (date) => date.getDay() === 0 || date.getDay() === 6,
-                        }}
-                        showOutsideDays
-                        className="p-3"
-                      />
-                    </div>
-                  )}
-                </div>
+                      <CalendarIcon className="w-5 h-5" />
+                      <span>{format(selectedDate, 'MMM d, yyyy')}</span>
+                    </button>
+                    {showDatePicker && (
+                      <div 
+                        ref={datePickerRef} 
+                        className="absolute left-1/2 sm:left-0 -translate-x-1/2 sm:translate-x-0 top-full mt-2 bg-white rounded-lg shadow-lg z-[1100]"
+                      >
+                        <DayPicker
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              setSelectedDate(date);
+                              setShowDatePicker(false);
+                            }
+                          }}
+                          modifiers={{
+                            disabled: (date) => date.getDay() === 0 || date.getDay() === 6,
+                          }}
+                          showOutsideDays
+                          className="p-3"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center justify-center w-full sm:w-auto gap-4">

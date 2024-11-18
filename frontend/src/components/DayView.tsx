@@ -139,7 +139,7 @@ export default function DayView({ schedule }: DayViewProps) {
 
   return (
     <div className="mx-auto max-w-4xl w-full">
-      <div className="grid grid-cols-[40px_1fr] sm:grid-cols-[40px_1fr] gap-4 h-[720px] overflow-y-auto relative pt-4 pb-6">
+      <div className="grid grid-cols-[45px_1fr] sm:grid-cols-[50px_1fr] gap-4 h-[720px] overflow-y-auto relative pt-4 pb-6">
         <div className="sticky left-0 h-full">
           {timeSlots.map((time, index) => (
             <div

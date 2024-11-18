@@ -145,7 +145,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
             {timeSlots.map((slot, index) => (
               <div
                 key={index}
-                className="text-center font-medium text-gray-700 text-xs whitespace-nowrap -ml-[50%]"
+                className="text-center font-medium pt-2 text-gray-700 text-xs whitespace-nowrap -ml-[50%]"
               >
                 {`${slot.hour}:${slot.minute}`}
               </div>
@@ -153,7 +153,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
           </div>
 
           {/* Days and events grid */}
-          <div className="space-y-1 relative bg-white z-[100]">
+          <div className="space-y-[0.08rem] relative bg-white z-[100]">
             <div
               className="absolute h-full w-[2px] bg-gray-500 z-[50] time-indicator"
               style={{
