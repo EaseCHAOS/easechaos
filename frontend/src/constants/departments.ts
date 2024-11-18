@@ -1,6 +1,5 @@
 export const departments = [
   { id: 'CE', name: 'Computer Science & Engineering' },
-  { id: 'RP', name: 'Renewable Energy Engineering' },
   { id: 'MN', name: 'Mining Engineering' },
   { id: 'MC', name: 'Mechanical Engineering' },
   { id: 'EL', name: 'Electrical Engineering' },
@@ -8,6 +7,7 @@ export const departments = [
   { id: 'SD', name: 'Statistical Data Science' },
   { id: 'CY', name: 'Cybersecurity' },
   { id: 'PE', name: 'Petroleum Engineering' },
+  { id: 'RP', name: 'Petroleum Refining and Petrochemical Engineering' },
   { id: 'GL', name: 'Geological Engineering' },
   { id: 'ME', name: 'Minerals Engineering' },
   { id: 'RN', name: 'Renewable Engineering' },
