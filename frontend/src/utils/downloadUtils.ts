@@ -118,14 +118,22 @@ export function downloadElementAsImage(elementId: string, fileName: string) {
 
   const { timeIndicator, originalStyles } = prepareElement(node as HTMLElement);
 
+  // Adjust dimensions based on device
+  const isMobile = window.innerWidth <= 768;
+  const config = {
+    width: isMobile ? 1200 : 1920,
+    height: isMobile ? 400 : 600,
+    pixelRatio: isMobile ? 2 : 4,
+  };
+
   toPng(node, {
     cacheBust: true,
-    width: 1920,
-    height: 600,
+    width: config.width,
+    height: config.height,
     backgroundColor: "white",
     style: { margin: "0", padding: "0" },
     quality: 1.0,
-    pixelRatio: 4,
+    pixelRatio: config.pixelRatio,
   })
     .then((dataUrl) => {
       const img = new Image();
@@ -163,14 +171,22 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
 
   const { timeIndicator, originalStyles } = prepareElement(node as HTMLElement);
 
+  // Adjust dimensions based on device
+  const isMobile = window.innerWidth <= 768;
+  const config = {
+    width: isMobile ? 1200 : 1920,
+    height: isMobile ? 400 : 600,
+    pixelRatio: isMobile ? 2 : 4,
+  };
+
   toPng(node, {
     cacheBust: true,
-    width: 1920,
-    height: 600,
+    width: config.width,
+    height: config.height,
     backgroundColor: "white",
     style: { margin: "0", padding: "0" },
     quality: 1.0,
-    pixelRatio: 4,
+    pixelRatio: config.pixelRatio,
   })
     .then((dataUrl) => {
       const img = new Image();

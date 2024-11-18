@@ -65,7 +65,7 @@ export default function DayView({ schedule }: DayViewProps) {
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
     const timeInHours = hours + minutes / 60;
-    return ((timeInHours - 7) / 13) * 100;
+    return ((timeInHours - 7) / 14) * 100;
   }, [currentTime]);
 
   if (!schedule) {
