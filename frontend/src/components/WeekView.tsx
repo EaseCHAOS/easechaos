@@ -61,7 +61,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
 
     const position = ((currentTimeInMinutes - startTimeInMinutes) / totalMinutes) * 100;
 
-    return Math.max(0, Math.min(position, 100))  * 0.987  // I have no idea why this works. Already spent 13hrs on this. Don't touch it. If you do, you sure as hell must know what you're doing.
+    return Math.max(0, Math.min(position, 100))
   }, [currentTime]);
 
 
@@ -138,7 +138,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
   return (
     <div className="relative w-full h-[calc(100vh-12rem)]">
       <div id="week-schedule" className="h-full overflow-x-auto bg-white">
-        <div className="min-w-[1200px] md:min-w-screen pb-2">
+        <div className="min-w-[1200px] md:min-w-0 pb-2">
           <div className="grid grid-cols-[45px_1fr] sticky top-0 bg-white z-10 py-2">
             <div className="h-4"/>
             <div className="grid grid-cols-25 relative pl-[3.7%]">
@@ -159,8 +159,9 @@ export default function WeekView({ schedule }: WeekViewProps) {
 
           {/* Days and events grid */}
           <div className="space-y-[0.08rem] relative bg-white z-[100] h-full">
+            {/* Time indicator */}
             <div
-              className="absolute h-full w-[2px] bg-gray-500 z-[50] time-indicator ml-[20px]"
+              className="absolute h-full w-[2px] bg-gray-500 z-[50] -ml-[20px]"
               style={{
                 left: `${currentTimePosition}%`,
                 transform: 'translateX(-50%)'
