@@ -50,8 +50,10 @@ NB: This project is still under development.
 
 ### Current Progress
 
-<img src="docs/screenshot.png" width="800">
-<img src="docs/screenshot1.png" width="800">
+<img src="docs/screenshot2.jpeg" width="900">
+<img src="docs/screenshot.jpeg" width="900">
+<img src="docs/screenshot1.jpeg" width="900">
+
 
 ## Contributors
 
