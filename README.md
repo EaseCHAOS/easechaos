@@ -1,5 +1,5 @@
 <div align="center"">
-  <img src="assets/easechaos.png" alt="easeCHAOS" width="100" height="100">
+  <img src="frontend/assets/easechaos.png" alt="easeCHAOS" width="100" height="100">
   <h1>easeCHAOS</h1>
 </div>
 
@@ -30,6 +30,7 @@ The application currently features:
 - Node.js 18+
 - Python 3.9+
 - Redis
+- Docker (Optional)
 
 ### Installation (Local without Docker)
 
