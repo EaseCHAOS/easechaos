@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { departments, years, type Department, type Year } from '../constants/departments';
+import easeChaosLogo from '../../assets/easechaos.png';
 
 
 
@@ -50,7 +51,7 @@ export default function LandingPage() {
                         <h1 className="mt-4 inline-block text-wrap bg-gradient-to-b from-gray-800 via-gray-700 to-gray-500 bg-clip-text text-transparent text-4xl font-semibold md:text-5xl xl:text-6xl xl:[line-height:1.125]">
                             EaseCHAOS
                         </h1>
-                        <img src={"../assets/easechaos.png"} alt="EaseCHAOS" className="w-15 h-10" />
+                        <img src={easeChaosLogo} alt="EaseCHAOS" className="w-15 h-10" />
 
                     </div>
 
