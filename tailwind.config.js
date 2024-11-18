@@ -2,7 +2,18 @@
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      // Remove these entries
+      keyframes: {
+        trace: {
+          // ... trace keyframes
+        }
+      },
+      animation: {
+        'trace': 'trace 4s linear infinite',
+      }
+      // Keep any other config entries you have
+    }
   },
   plugins: [],
 };

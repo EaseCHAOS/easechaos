@@ -1,6 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', sans-serif;
+  }
+}
 
 .rdp {
   --rdp-cell-size: 40px;
@@ -11,4 +19,25 @@
 
 .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
   background-color: #f3f4f6;
+}
+
+@keyframes comet {
+  0% {
+      transform: translate(-50%, -50%) rotate(0deg) translateX(150px) rotate(0deg);
+      opacity: 1;
+  }
+  50% {
+      opacity: 0.5;
+  }
+  100% {
+      transform: translate(-50%, -50%) rotate(360deg) translateX(150px) rotate(-360deg);
+      opacity: 1;
+  }
+}
+
+.animate-comet {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  animation: comet 8s linear infinite;
 }

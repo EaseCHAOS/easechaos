@@ -12,6 +12,13 @@ const timeSlots = Array.from({ length: 27 }, (_, i) => ({
   minute: i % 2 === 0 ? '00' : '30'
 }));
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+const dayAbbreviations: Record<string, string> = {
+  Monday: 'Mon',
+  Tuesday: 'Tue',
+  Wednesday: 'Wed',
+  Thursday: 'Thu',
+  Friday: 'Fri'
+};
 
 function convertTimeToNumber(timeStr: string): number {
   const [hours, minutes] = timeStr.split(':').map(Number);
@@ -54,7 +61,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
 
     const position = ((currentTimeInMinutes - startTimeInMinutes) / totalMinutes) * 100;
 
-    return Math.max(0, Math.min(position, 100))  * 1.009  // I have no idea why this works. Already spent 13hrs on this. Don't touch it. If you do, you sure as hell must know what you're doing.
+    return Math.max(0, Math.min(position, 100))  * 0.987  // I have no idea why this works. Already spent 13hrs on this. Don't touch it. If you do, you sure as hell must know what you're doing.
   }, [currentTime]);
 
 
@@ -134,7 +141,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
       <div id="week-schedule" className="overflow-x-auto bg-white">
         <div className="min-w-[2000px] pb-2">
           <div className="grid grid-cols-[100px_repeat(27,1fr)] mb-2 sticky top-0 bg-white z-10 pb-2 h-full">
-            <div className="font-medium text-gray-700 bg-white sticky min-w-[100px] left-0 flex justify-end z-[100]" />
+            <div className="font-medium text-gray-700 bg-white sticky min-w-[100px] right-0 flex justify-end z-[100]" />
             {timeSlots.map((slot, index) => (
               <div
                 key={index}
@@ -164,9 +171,9 @@ export default function WeekView({ schedule }: WeekViewProps) {
               const daySchedule = processedSchedule.find((s) => s.day === day);
 
               return (
-                <div key={day} className="grid grid-cols-[100px_1fr] gap-2">
-                  <div className="font-medium text-gray-700 py-2 sticky left-0 flex justify-end z-[100] bg-white pr-[6px]">
-                    {day}
+                <div key={day} className="grid grid-cols-[37px_1fr] sm:grid-cols-[45px_1fr] gap-2">
+                  <div className="font-medium bg-white text-gray-700 text-[14px] py-2 sticky left-0 flex z-[100]">
+                    {dayAbbreviations[day]}
                   </div>
 
                   {/* time slots and events */}

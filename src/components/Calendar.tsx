@@ -22,7 +22,7 @@ export default function Calendar() {
   const { dept, year } = useParams();
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/v1/get_time_table', {
+    fetch(import.meta.env.VITE_API_URL + '/get_time_table', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -133,7 +133,10 @@ export default function Calendar() {
                     </span>
                   </button>
                   {showDatePicker && (
-                    <div ref={datePickerRef} className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg z-50">
+                    <div 
+                      ref={datePickerRef} 
+                      className="absolute left-1/2 sm:left-0 -translate-x-1/2 sm:translate-x-0 top-full mt-2 bg-white rounded-lg shadow-lg z-[1100]"
+                    >
                       <DayPicker
                         mode="single"
                         selected={selectedDate}
