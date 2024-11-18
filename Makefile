@@ -5,13 +5,13 @@ VOLUMES=easechaose_redis-data
 
 install:
 	pip install -r requirements.txt
-	pnpm install
+	cd frontend && pnpm install
 
 run-backend:
 	python3 -m uvicorn app:app --reload
 
 run-frontend:
-	pnpm run dev
+	cd frontend && pnpm run dev
 
 local:
 	make install

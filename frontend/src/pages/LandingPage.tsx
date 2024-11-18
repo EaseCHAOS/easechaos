@@ -49,7 +49,7 @@ export default function LandingPage() {
                         <h1 className="mt-4 inline-block text-wrap bg-gradient-to-b from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent text-4xl font-semibold md:text-5xl xl:text-6xl xl:[line-height:1.125]">
                             EaseCHAOS
                         </h1>
-                        <img src={"/assets/easechaos.png"} alt="EaseCHAOS" className="w-15 h-10" />
+                        <img src={"./assets/easechaos.png"} alt="EaseCHAOS" className="w-15 h-10" />
 
                     </div>
 
