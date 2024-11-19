@@ -54,7 +54,10 @@ def _get_daily_table(df: pd.DataFrame, class_pattern: str) -> pd.DataFrame:
 
     df = df.iloc[time_row[0] + 1 :]
 
-    df = df.mask(~df.map(lambda x: bool(re.search(class_pattern, str(x)))))
+    # here you are, you dipshit.  
+    # basically replace the space with a regex that matches zero or more spaces
+    buggy_pattern = class_pattern.replace(" ", r"\s*")
+    df = df.mask(~df.map(lambda x: bool(re.search(buggy_pattern, str(x)))))
     df = df.dropna(how="all")
 
     return df

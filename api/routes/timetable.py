@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from api.extract.extract_table import get_time_table, generate_calendar
 import json
 from pathlib import Path
+import hashlib
 import pandas as pd
 from openpyxl import Workbook
 from io import BytesIO
@@ -95,6 +96,13 @@ async def get_time_table_endpoint(request: TimeTableRequest):
     - JSON: Parsed data from the `get_json_table` function that contains the time table cutting across days and time slots.
         It covers merged durations of lectures exceeding one hour as well.
     """
+    table = get_table_from_cache(request.class_pattern, request.filename)
+    
+    # Generate a hash based on the file content and request parameters
+    file_path = os.path.join(DRAFTS_FOLDER, f"{request.filename}.xlsx")
+    with open(file_path, "rb") as f:
+        content_hash = hashlib.md5(f.read()).hexdigest()
+    
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
     json_data = get_json_table(request)
@@ -134,7 +142,12 @@ async def get_time_table_endpoint(request: TimeTableRequest):
             day_data.append(current_slot)
         table_data.append({"day": days[index], "data": day_data})
 
-    return table_data
+    response_data = {
+        "data": table_data,
+        "version": content_hash
+    }
+    
+    return response_data
 
 
 @router.post("/download")
