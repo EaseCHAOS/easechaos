@@ -6,6 +6,9 @@ export default {
       gridTemplateColumns: {
         '25': 'repeat(25, minmax(0, 1fr))',
       },
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+      },
     },
   },
   plugins: [],
