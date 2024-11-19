@@ -53,18 +53,19 @@ export default function WeekView({ schedule }: WeekViewProps) {
   const currentTimePosition = React.useMemo(() => {
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
+    const timeInHours = hours + minutes / 60;
+    
+    // Hide indicator if outside 7am-8pm
+    if (timeInHours < 7 || timeInHours > 20) {
+      return null;
+    }
 
-    const startTimeInMinutes = 7 * 60;
-    const endTimeInMinutes = 20 * 60;
-    const currentTimeInMinutes = (hours * 60) + minutes;
-    const totalMinutes = endTimeInMinutes - startTimeInMinutes;
+    const startTimeInHours = 7;  // 7 AM
+    const endTimeInHours = 20;   // 8 PM
+    const totalHours = endTimeInHours - startTimeInHours;
 
-    const position = ((currentTimeInMinutes - startTimeInMinutes) / totalMinutes) * 100;
-
-    return Math.max(0, Math.min(position, 100))
+    return ((timeInHours - startTimeInHours) / totalHours) * 100;
   }, [currentTime]);
-
-
 
   console.log(currentTimePosition);
 
@@ -90,24 +91,20 @@ export default function WeekView({ schedule }: WeekViewProps) {
       .reduce((acc, current) => {
         const previousEvent = acc[acc.length - 1];
 
-        // Enhanced same course check to handle split cases
         const isSameCourse = previousEvent?.value?.trim() === current.value.trim();
         const isSequential = previousEvent?.end === current.start ||
           (previousEvent?.end === "12:00" && current.start === "12:30");
 
-        // Check for horizontally adjacent identical events
         const isHorizontalDuplicate = previousEvent?.start === current.start && 
                                     previousEvent?.end === current.end &&
                                     previousEvent?.value?.trim() === current.value.trim();
 
         if ((isSameCourse && isSequential) || isHorizontalDuplicate) {
-          // Merge the events by extending the previous event's end time
           return [
             ...acc.slice(0, -1),
             {
               ...previousEvent,
               end: isSequential ? current.end : previousEvent.end,
-              // For horizontal duplicates, we don't change the end time
               horizontalSpan: isHorizontalDuplicate ? (previousEvent.horizontalSpan || 1) + 1 : 1
             }
           ];
@@ -169,18 +166,20 @@ export default function WeekView({ schedule }: WeekViewProps) {
           {/* Days and events grid */}
           <div className="space-y-[0.08rem] relative bg-white z-[100] h-full">
             {/* Time indicator */}
-            <div
-              className="absolute h-full w-[2px] bg-gray-500 z-[50] -ml-[20px] time-indicator"
-              style={{
-                left: `${currentTimePosition}%`,
-                transform: 'translateX(-50%)'
-              }}
-            >
+            {currentTimePosition !== null && (
               <div
-                className="absolute top-0 w-2 h-2 rounded-full bg-gray-500"
-                style={{ transform: 'translate(-35%, -50%)' }}
-              />
-            </div>
+                className="absolute h-full w-[2px] bg-gray-500 z-[50] -ml-[20px] time-indicator"
+                style={{
+                  left: `${currentTimePosition}%`,
+                  transform: 'translateX(-50%)'
+                }}
+              >
+                <div
+                  className="absolute top-0 w-2 h-2 rounded-full bg-gray-500"
+                  style={{ transform: 'translate(-35%, -50%)' }}
+                />
+              </div>
+            )}
 
             {days.map((day) => {
               const daySchedule = processedSchedule.find((s) => s.day === day);

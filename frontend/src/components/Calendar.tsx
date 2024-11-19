@@ -29,31 +29,61 @@ export default function Calendar() {
 
   const fetchSchedule = async (dept: string, year: string) => {
     const cacheKey = `schedule:${dept}:${year}`;
+    const versionKey = `${cacheKey}:version`;
+    
     const cachedData = localStorage.getItem(cacheKey);
+    const cachedVersion = localStorage.getItem(versionKey);
 
     if (cachedData) {
+      validateAndUpdateCache(dept, year, cachedData, cachedVersion);
       return JSON.parse(cachedData);
     }
 
+    return fetchFresh(dept, year);
+  };
+
+  const validateAndUpdateCache = async (dept: string, year: string, cachedData: string, cachedVersion: string | null) => {
+    try {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/get_time_table', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: 'Draft_1',
+          class_pattern: `${dept} ${year}`
+        })
+      });
+
+      if (!response.ok) return;
+
+      const { data, version } = await response.json();
+      
+      if (version !== cachedVersion || JSON.stringify(data) !== cachedData) {
+        localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
+        localStorage.setItem(`schedule:${dept}:${year}:version`, version);
+        setSchedule(data);
+      }
+    } catch (error) {
+      console.error('Background validation failed:', error);
+    }
+  };
+
+  const fetchFresh = async (dept: string, year: string) => {
     const response = await fetch(import.meta.env.VITE_API_URL + '/get_time_table', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        filename: 'Draft_2',
+        filename: 'Draft_3',
         class_pattern: `${dept} ${year}`
       })
     });
-
-    console.log('response: ', response);
 
     if (!response.ok) {
       throw new Error('Failed to fetch schedule');
     }
 
-    const data = await response.json();
-    localStorage.setItem(cacheKey, JSON.stringify(data));
+    const { data, version } = await response.json();
+    localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
+    localStorage.setItem(`schedule:${dept}:${year}:version`, version);
     return data;
   };
 
