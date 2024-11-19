@@ -65,7 +65,12 @@ export default function DayView({ schedule }: DayViewProps) {
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
     const timeInHours = hours + minutes / 60;
-    return ((timeInHours - 7) / 14) * 100;
+    
+    if (timeInHours < 7 || timeInHours > 20) {
+      return null;
+    }
+    
+    return ((timeInHours - 7) / 13) * 100;
   }, [currentTime]);
 
   if (!schedule) {
@@ -157,16 +162,20 @@ export default function DayView({ schedule }: DayViewProps) {
         </div>
 
         <div className="relative border-l border-gray-200 pt-2 h-full">
-          <div 
-            className="absolute w-full h-[2px] bg-gray-500 z-10 mt-[60px]"
-            style={{ 
-              top: `${currentTimePosition}%`,  
-              transform: 'translateY(-50%)'
-            }} 
-          >
-            <div className="absolute left-0 w-2 h-2 rounded-full bg-gray-500" 
-                 style={{ transform: 'translate(-50%, -34%)' }} /> 
-          </div>
+          {currentTimePosition !== null && (
+            <div 
+              className="absolute w-full h-[2px] bg-gray-500 z-10 mt-[60px]"
+              style={{ 
+                top: `${currentTimePosition}%`,  
+                transform: 'translateY(-50%)'
+              }} 
+            >
+              <div 
+                className="absolute left-0 w-2 h-2 rounded-full bg-gray-500" 
+                style={{ transform: 'translate(-50%, -34%)' }} 
+              /> 
+            </div>
+          )}
 
           <div className="absolute inset-0 pt-2 pb-4">
             {timeSlots.map((hour, index) => (
