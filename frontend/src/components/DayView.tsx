@@ -138,8 +138,8 @@ export default function DayView({ schedule }: DayViewProps) {
   }, []);
 
   return (
-    <div className="mx-auto max-w-4xl w-full">
-      <div className="grid grid-cols-[45px_1fr] sm:grid-cols-[50px_1fr] gap-4 h-[720px] overflow-y-auto relative pt-4 pb-6">
+    <div className="w-full h-[calc(100vh-8rem)]">
+      <div className="grid grid-cols-[45px_1fr] sm:grid-cols-[50px_1fr] gap-4 h-full relative pt-4 pb-6">
         <div className="sticky left-0 h-full">
           {timeSlots.map((time, index) => (
             <div
@@ -156,9 +156,9 @@ export default function DayView({ schedule }: DayViewProps) {
           ))}
         </div>
 
-        <div className="relative border-l border-gray-200 pt-2">
+        <div className="relative border-l border-gray-200 pt-2 h-full">
           <div 
-            className="absolute w-full h-[2px] bg-gray-500 z-10"
+            className="absolute w-full h-[2px] bg-gray-500 z-10 mt-[60px]"
             style={{ 
               top: `${currentTimePosition}%`,  
               transform: 'translateY(-50%)'
@@ -180,11 +180,9 @@ export default function DayView({ schedule }: DayViewProps) {
 
           {mergedEvents.map((event, index) => {
             const colors = getCourseColor(event.value);
-            const width = (event.totalSplits ?? 1) > 1 
-              ? `calc(${100 / (event.totalSplits ?? 1)}% - 1rem)` 
-              : event.isOverlapping 
-                ? 'calc(50% - 1rem)' 
-                : 'calc(100% - 1rem)';
+            const width = event.isOverlapping || (event.totalSplits ?? 1) > 1
+              ? `${95 / ((event.totalSplits ?? 1))}%`
+              : '95%';
             
             return (
               <div
@@ -192,19 +190,23 @@ export default function DayView({ schedule }: DayViewProps) {
                 className={clsx(
                   `absolute p-2 rounded-md border border-l-4 border-l-[${colors.bg}]`,
                   colors.bg, colors.border,
-                  "hover:brightness-95 transition-colors cursor-pointer"
+                  "hover:brightness-95 transition-colors cursor-pointer overflow-hidden"
                 )}
                 style={{
                   top: `${event.startPosition}%`,
                   height: `${event.duration}%`,
                   minHeight: '40px',
-                  left: (event.totalSplits ?? 1) > 1 
-                    ? `calc(${(event.splitIndex! * 100) / event.totalSplits!}%)`
-                    : event.isOverlapping ? '50%' : '0',
-                  width
+                  left: event.isOverlapping || (event.totalSplits ?? 1) > 1
+                    ? `${(event.splitIndex! * 47.5) }%`
+                    : '0',
+                  width,
+                  maxWidth: '95%'
                 }}
               >
-                <div className={clsx("text-sm line-clamp-2", colors.text)}>
+                <div className={clsx(
+                  "text-sm break-words overflow-hidden",
+                  colors.text
+                )}>
                   {event.value}
                 </div>
               </div>

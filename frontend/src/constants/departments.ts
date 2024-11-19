@@ -3,7 +3,7 @@ export const departments = [
   { id: 'MN', name: 'Mining Engineering' },
   { id: 'MC', name: 'Mechanical Engineering' },
   { id: 'EL', name: 'Electrical Engineering' },
-  { id: 'GE', name: 'Geomatic Engineering' },
+  { id: 'GM', name: 'Geomatic Engineering' },
   { id: 'SD', name: 'Statistical Data Science' },
   { id: 'CY', name: 'Cybersecurity' },
   { id: 'PE', name: 'Petroleum Engineering' },

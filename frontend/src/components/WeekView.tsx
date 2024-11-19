@@ -90,23 +90,31 @@ export default function WeekView({ schedule }: WeekViewProps) {
       .reduce((acc, current) => {
         const previousEvent = acc[acc.length - 1];
 
-        const isSameCourse = previousEvent?.value === current.value;
+        // Enhanced same course check to handle split cases
+        const isSameCourse = previousEvent?.value?.trim() === current.value.trim();
         const isSequential = previousEvent?.end === current.start ||
           (previousEvent?.end === "12:00" && current.start === "12:30");
 
-        if (isSameCourse && isSequential) {
+        // Check for horizontally adjacent identical events
+        const isHorizontalDuplicate = previousEvent?.start === current.start && 
+                                    previousEvent?.end === current.end &&
+                                    previousEvent?.value?.trim() === current.value.trim();
+
+        if ((isSameCourse && isSequential) || isHorizontalDuplicate) {
           // Merge the events by extending the previous event's end time
           return [
             ...acc.slice(0, -1),
             {
               ...previousEvent,
-              end: current.end
+              end: isSequential ? current.end : previousEvent.end,
+              // For horizontal duplicates, we don't change the end time
+              horizontalSpan: isHorizontalDuplicate ? (previousEvent.horizontalSpan || 1) + 1 : 1
             }
           ];
         }
 
-        return [...acc, current];
-      }, [] as typeof day.data)
+        return [...acc, { ...current, horizontalSpan: 1 }];
+      }, [] as (typeof day.data[0] & { horizontalSpan?: number })[])
       .flatMap(slot => {
         if (!slot.value) return [];
 
@@ -129,7 +137,8 @@ export default function WeekView({ schedule }: WeekViewProps) {
           startPosition,
           duration,
           splitIndex: index,
-          totalSplits: values.length
+          totalSplits: values.length,
+          horizontalSpan: slot.horizontalSpan || 1
         }));
       })
       .sort((a, b) => a.startPosition - b.startPosition)
@@ -161,7 +170,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
           <div className="space-y-[0.08rem] relative bg-white z-[100] h-full">
             {/* Time indicator */}
             <div
-              className="absolute h-full w-[2px] bg-gray-500 z-[50] -ml-[20px]"
+              className="absolute h-full w-[2px] bg-gray-500 z-[50] -ml-[20px] time-indicator"
               style={{
                 left: `${currentTimePosition}%`,
                 transform: 'translateX(-50%)'
@@ -212,13 +221,13 @@ export default function WeekView({ schedule }: WeekViewProps) {
                           )}
                           style={{
                             left: `${slot.startPosition}%`,
-                            width: `${slot.duration}%`,
+                            width: `${slot.duration * (slot.horizontalSpan || 1)}%`,
                             top: slot.totalSplits > 1 ? `${(slot.splitIndex * 100) / slot.totalSplits}%` : 0,
                             height: slot.totalSplits > 1 ? `${100 / slot.totalSplits}%` : '100%'
                           }}
                         >
                           <div className={clsx(
-                            "text-xs line-clamp-2 overflow-hidden text-ellipsis text-center",
+                            "text-sm sm:text-xs line-clamp-2 overflow-hidden text-ellipsis text-center",
                             colors.text
                           )}>
                             {slot.value}

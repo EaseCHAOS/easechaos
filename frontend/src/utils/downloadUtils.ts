@@ -8,6 +8,21 @@ type ElementStyles = {
   overflowY: string;
 };
 
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+
+const DIMENSIONS = {
+  WIDTH: 4961,  
+  HEIGHT: 2500, 
+  PADDING: 100  
+};
+
+const QUALITY_SETTINGS = {
+  pixelRatio: isMobile ? 1.5 : 2,
+  imageQuality: isMobile ? 0.8 : 0.95,
+  pdfScale: isMobile ? 1.2 : 1.5
+};
+
 function prepareElement(node: HTMLElement) {
   const timeIndicator = node.querySelector(".time-indicator") as HTMLElement;
   const originalStyles = {
@@ -20,7 +35,7 @@ function prepareElement(node: HTMLElement) {
     timeIndicator.style.display = "none";
   }
 
-  node.style.zoom = "0.7";
+  node.style.zoom = "1";
   node.style.overflowX = "hidden";
   node.style.overflowY = "hidden";
 
@@ -54,79 +69,97 @@ function getImageBoundaries(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEle
   return { minX, maxX, minY, maxY };
 }
 
-function createCroppedCanvas(canvas: HTMLCanvasElement, boundaries: ReturnType<typeof getImageBoundaries>, bottomPadding = 10, horizontalPadding = 10) {
+function createCroppedCanvas(
+  canvas: HTMLCanvasElement, 
+  boundaries: ReturnType<typeof getImageBoundaries>,
+  padding = DIMENSIONS.PADDING
+) {
   const { minX, maxX, minY, maxY } = boundaries;
-  const width = maxX - minX;
-  const height = maxY - minY;
+  const contentWidth = maxX - minX;
+  const contentHeight = maxY - minY;
 
   const croppedCanvas = document.createElement("canvas");
   const croppedCtx = croppedCanvas.getContext("2d");
 
   if (croppedCtx) {
-    croppedCanvas.width = width + (horizontalPadding * 2);
-    croppedCanvas.height = height + bottomPadding;
+    croppedCanvas.width = DIMENSIONS.WIDTH;
+    croppedCanvas.height = DIMENSIONS.HEIGHT;
 
-    // Fill the entire canvas with white background
     croppedCtx.fillStyle = 'white';
-    croppedCtx.fillRect(0, 0, width + (horizontalPadding * 2), height + bottomPadding);
+    croppedCtx.fillRect(0, 0, croppedCanvas.width, croppedCanvas.height);
+
+    const widthScale = (DIMENSIONS.WIDTH - padding * 2) / contentWidth;
+    
+    const scaledWidth = contentWidth * widthScale;
+    const scaledHeight = contentHeight * widthScale;
+
+    const xOffset = (DIMENSIONS.WIDTH - scaledWidth) / 2;
+    const yOffset = Math.max(padding, (DIMENSIONS.HEIGHT - scaledHeight) / 2);
 
     croppedCtx.drawImage(
       canvas,
       minX,
       minY,
-      width,
-      height,
-      horizontalPadding,
-      0,
-      width,
-      height
+      contentWidth,
+      contentHeight,
+      xOffset,
+      yOffset,
+      scaledWidth,
+      scaledHeight
+    );
+
+    croppedCtx.strokeStyle = '#f0f0f0';
+    croppedCtx.lineWidth = 1;
+    croppedCtx.strokeRect(
+      padding, 
+      padding, 
+      DIMENSIONS.WIDTH - padding * 2, 
+      DIMENSIONS.HEIGHT - padding * 2
     );
   }
 
-  return { croppedCanvas, width: width + (horizontalPadding * 2), height: height + bottomPadding };
+  return { 
+    croppedCanvas, 
+    width: DIMENSIONS.WIDTH, 
+    height: DIMENSIONS.HEIGHT 
+  };
 }
-
 
 function downloadFile(content: string | Blob, fileName: string, mimeType: string) {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-  // For iOS devices, we need to use a data URL approach
   if (isIOS) {
     const link = document.createElement('a');
     link.download = fileName;
     
     if (content instanceof Blob) {
-      // Convert Blob to data URL for iOS
       const reader = new FileReader();
       reader.onload = function() {
         link.href = reader.result as string;
-        // iOS requires the link to be in the DOM and clicked programmatically
         document.body.appendChild(link);
         link.click();
-        
-        // Cleanup
-        setTimeout(() => {
-          document.body.removeChild(link);
-        }, 100);
+        setTimeout(() => document.body.removeChild(link), 100);
       };
       reader.readAsDataURL(content);
     } else {
-      // If it's already a data URL
       link.href = content;
       document.body.appendChild(link);
       link.click();
-      
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link);
-      }, 100);
+      setTimeout(() => document.body.removeChild(link), 100);
     }
     return;
   }
 
-  // For non-iOS devices, use FileSaver
-  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
-  saveAs(blob, fileName);
+  const blob = content instanceof Blob 
+    ? new Blob([content], { type: content.type }) 
+    : new Blob([content], { type: mimeType });
+    
+  const blobWithName = new File([blob], fileName, { 
+    type: blob.type,
+    lastModified: new Date().getTime()
+  });
+  
+  saveAs(blobWithName, fileName);
 }
 
 export function downloadElementAsImage(elementId: string, fileName: string) {
@@ -135,12 +168,11 @@ export function downloadElementAsImage(elementId: string, fileName: string) {
 
   const { timeIndicator, originalStyles } = prepareElement(node as HTMLElement);
 
-  // Adjust dimensions based on device
-  const isMobile = window.innerWidth <= 768;
   const config = {
-    width: isMobile ? 1200 : 1920,
-    height: isMobile ? 400 : 600,
-    pixelRatio: isMobile ? 2 : 4,
+    width: DIMENSIONS.WIDTH,
+    height: DIMENSIONS.HEIGHT,
+    pixelRatio: QUALITY_SETTINGS.pixelRatio,
+    padding: DIMENSIONS.PADDING
   };
 
   toPng(node, {
@@ -149,7 +181,7 @@ export function downloadElementAsImage(elementId: string, fileName: string) {
     height: config.height,
     backgroundColor: "white",
     style: { margin: "0", padding: "0" },
-    quality: 1.0,
+    quality: QUALITY_SETTINGS.imageQuality,
     pixelRatio: config.pixelRatio,
   })
     .then((dataUrl) => {
@@ -166,13 +198,13 @@ export function downloadElementAsImage(elementId: string, fileName: string) {
         ctx.drawImage(img, 0, 0);
 
         const boundaries = getImageBoundaries(ctx, canvas);
-        const { croppedCanvas } = createCroppedCanvas(canvas, boundaries, 10, 10);
+        const { croppedCanvas } = createCroppedCanvas(canvas, boundaries);
         
         croppedCanvas.toBlob((blob) => {
           if (blob) {
             downloadFile(blob, fileName, 'image/png');
           }
-        }, 'image/png', 1.0);
+        }, 'image/png', QUALITY_SETTINGS.imageQuality);
       };
     })
     .catch((error) => {
@@ -188,12 +220,11 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
 
   const { timeIndicator, originalStyles } = prepareElement(node as HTMLElement);
 
-  // Reduced dimensions and pixel ratio
-  const isMobile = window.innerWidth <= 768;
   const config = {
-    width: isMobile ? 800 : 1200,
-    height: isMobile ? 300 : 400,
-    pixelRatio: isMobile ? 1.5 : 2,  // Reduced from 2/4 to 1.5/2
+    width: DIMENSIONS.WIDTH,
+    height: DIMENSIONS.HEIGHT,
+    pixelRatio: QUALITY_SETTINGS.pixelRatio,
+    padding: DIMENSIONS.PADDING
   };
 
   toPng(node, {
@@ -202,7 +233,7 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
     height: config.height,
     backgroundColor: "white",
     style: { margin: "0", padding: "0" },
-    quality: 0.95,  // Slightly reduced quality
+    quality: QUALITY_SETTINGS.imageQuality,
     pixelRatio: config.pixelRatio,
   })
     .then((dataUrl) => {
@@ -219,29 +250,29 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
         ctx.drawImage(img, 0, 0);
 
         const boundaries = getImageBoundaries(ctx, canvas);
-        const { croppedCanvas, width, height } = createCroppedCanvas(canvas, boundaries, 40);
+        const { croppedCanvas } = createCroppedCanvas(canvas, boundaries);
 
         const opt = {
           margin: 0,
           filename: fileName,
-          image: { type: 'png', quality: 1 },  // Slightly reduced quality
+          image: { type: 'png', quality: QUALITY_SETTINGS.imageQuality },
           html2canvas: { 
-            scale: 1.5,  // Reduced from 2 to 1.5
+            scale: QUALITY_SETTINGS.pdfScale,
             useCORS: true,
             allowTaint: true
           },
           jsPDF: {
             unit: 'px',
-            format: [width, height + 40],
-            orientation: width > (height + 40) ? 'landscape' : 'portrait',
+            format: [DIMENSIONS.WIDTH, DIMENSIONS.HEIGHT],
+            orientation: 'landscape',
             hotfixes: ['px_scaling'],
-            compress: true  // Added compression
+            compress: true
           },
           forceDownload: true,
           outputPdf: 'save'
         };
 
-        // For iOS, we need to handle the PDF differently
+        // Handle iOS devices differently
         if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
           opt.outputPdf = 'dataurlstring';
           html2pdf()
@@ -256,7 +287,6 @@ export function downloadElementAsPDF(elementId: string, fileName: string) {
               alert("Failed to download PDF. Please try again.");
             });
         } else {
-          // For other platforms, use default download
           html2pdf()
             .set(opt)
             .from(croppedCanvas)
