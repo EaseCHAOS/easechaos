@@ -19,14 +19,14 @@ export default function LandingPage() {
     return (
         <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center p-4 md:p-6 mx-auto">
             <div className="relative max-w-4xl w-full text-center space-y-6">
-                <div className="absolute top-0 w-full h-[50vh] sm:h-[60vh] bg-[url('../assets/pattern.svg')] bg-cover bg-center opacity-10 bg-blend-darken" />
+                <div className="absolute top-0 w-full h-[60vh] bg-[url('../assets/pattern.svg')] bg-cover bg-center opacity-10 bg-blend-darken" />
                 {/* Hero Section */}
                 <div className="space-y-6 text-center">
                     <a
                         href="https://github.com/Easechaos/easechaos"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group inline-flex items-center border border-gray-300 px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600 hover:bg-gray-200 transition-colors duration-200"
+                        className="group inline-flex items-center border border-gray-400 px-4 py-2 bg-gray-200 rounded-full text-md text-[#71717A] hover:bg-gray-100 transition-colors duration-200"
                     >
                         Star us on GitHub
                         <span className="ml-2 group-hover:hidden z-10">→</span>
@@ -63,7 +63,7 @@ export default function LandingPage() {
 
                 {/* Selector Section */}
                 <div className="relative w-full">
-                    <div className="relative z-10 bg-white border border-[#E4E4E7] rounded-lg p-4 space-y-4 max-w-sm mx-auto">
+                    <div className="relative z-10 shadow-sm bg-white border border-[#E4E4E7] rounded-lg p-4 space-y-4 max-w-sm mx-auto">
                         <div className="space-y-4">
                             <select
                                 value={selectedDept}
@@ -116,7 +116,7 @@ export default function LandingPage() {
                                     </svg>
                                     Quick Access
                                 </h3>
-                                <p className="text-sm pt-2 pb-4 mx-10 leading-7 text-black/70">
+                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A]">
                                     Instantly view your class schedule with just two selections.
                                 </p>
 
@@ -133,7 +133,7 @@ export default function LandingPage() {
                                     </svg>
                                     Weekly Overview
                                 </h3>
-                                <p className="text-sm pt-2 pb-4 mx-10 leading-7 text-black/70">
+                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A]">
                                     See your entire week at a glance with our intuitive calendar view
                                 </p>
 
@@ -150,7 +150,7 @@ export default function LandingPage() {
                                     </svg>
                                     Mobile Friendly
                                 </h3>
-                                <p className="text-sm pt-2 pb-4 mx-10 leading-7 text-black/70">
+                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A]">
                                     Access your schedule on any device, anywhere
                                 </p>
 

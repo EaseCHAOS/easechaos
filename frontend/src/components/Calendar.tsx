@@ -46,6 +46,8 @@ export default function Calendar() {
       })
     });
 
+    console.log('response: ', response);
+
     if (!response.ok) {
       throw new Error('Failed to fetch schedule');
     }
@@ -129,24 +131,26 @@ export default function Calendar() {
         "h-screen mx-auto",
         viewMode === 'week' ? "max-w-12xl" : "max-w-4xl"
       )}>
-        <div className="bg-white rounded-lg shadow-lg">
+        <div className="bg-white rounded-lg shadow-lg h-full flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b">
+          <div className="p-4 border-b sticky top-0 bg-white z-50">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex flex-col items-center sm:items-start sm:flex-row gap-4">
-                <a
-                  href="/"
-                  className="border-2 border-[#1B1B1B] p-2 rounded-md hover:bg-gray-100 mr-2"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </a>
-                <h1 className="text-2xl font-bold text-center sm:text-left">
-                  {viewMode === 'week'
-                    ? "Week's Schedule"
-                    : format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-                      ? "Today"
-                      : format(selectedDate, 'EEEE')}
-                </h1>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-4">
+                  <a
+                    href="/"
+                    className="border border-[#1B1B1B] p-1.5 rounded-md hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </a>
+                  <h1 className="text-2xl font-bold">
+                    {viewMode === 'week'
+                      ? "Week's Schedule"
+                      : format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                        ? "Today"
+                        : format(selectedDate, 'EEEE')}
+                  </h1>
+                </div>
                 {viewMode === 'day' && (
                   <div className="relative">
                     <button
@@ -272,15 +276,17 @@ export default function Calendar() {
             </div>
           </div>
 
-          {/* Calendar Grid - Wrap with Suspense */}
-          <div className="overflow-auto max-9xl px-4">
-            <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
-              {viewMode === 'week' ? (
-                <WeekView schedule={schedule} />
-              ) : (
-                <DayView schedule={currentDaySchedule} />
-              )}
-            </Suspense>
+          {/* Calendar Grid - Modified to take remaining height */}
+          <div className="flex-1 overflow-auto">
+            <div className="px-4">
+              <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
+                {viewMode === 'week' ? (
+                  <WeekView schedule={schedule} />
+                ) : (
+                  <DayView schedule={currentDaySchedule} />
+                )}
+              </Suspense>
+            </div>
           </div>
         </div>
       </div>
