@@ -1,4 +1,6 @@
 import os
+import logging
+from collections import defaultdict
 
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
@@ -60,14 +62,21 @@ def get_json_table(request: TimeTableRequest):
     return json.loads(table)
 
 
+# Set up logging
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
+
+# Track unique problematic entries
+
 def convert_to_24hour(time_str: str, previous_was_pm: bool = False) -> str:
-    """Convert time to 24-hour format based on class schedule rules.
-    
-    Rules:
-    - For start times: 7-11 are AM, 12 and 1-7 are PM
-    - For end times: if previous time was PM, then this is also PM
-    """
-    hours, minutes = map(int, time_str.split(':'))
+    """Convert time to 24-hour format based on class schedule rules."""
+    if not time_str or not time_str.strip():
+        raise ValueError("Time string cannot be empty")
+        
+    try:
+        hours, minutes = map(int, time_str.strip().split(':'))
+    except ValueError as e:
+        raise e
     
     if not previous_was_pm:
         if 7 <= hours <= 11:
@@ -96,7 +105,7 @@ async def get_time_table_endpoint(request: TimeTableRequest):
     - JSON: Parsed data from the `get_json_table` function that contains the time table cutting across days and time slots.
         It covers merged durations of lectures exceeding one hour as well.
     """
-    table = get_table_from_cache(request.class_pattern, request.filename)
+    table = get_table_from_cache(request.filename, request.class_pattern)
     
     # Generate a hash based on the file content and request parameters
     file_path = os.path.join(DRAFTS_FOLDER, f"{request.filename}.xlsx")
@@ -106,7 +115,7 @@ async def get_time_table_endpoint(request: TimeTableRequest):
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
     json_data = get_json_table(request)
-
+    
     table_data = []
     for index, day in enumerate(json_data):
         day_data = []
@@ -114,40 +123,46 @@ async def get_time_table_endpoint(request: TimeTableRequest):
         previous_was_pm = False
         
         for key, value in day.items():
+            if not key or not isinstance(key, str):
+                continue
+                    
             time_parts = key.split("-")
-            if len(time_parts) == 2:
-                start, end = time_parts
-            else:
-                start = "-".join(time_parts[:-1])
-                end = time_parts[-1]
+            if len(time_parts) < 2:
+                continue
+                    
+            start = time_parts[0].strip()
+            end = time_parts[-1].strip()
                 
-            # Convert start time and determine if it's PM
-            start_24h = convert_to_24hour(start)
-            start_hour = int(start_24h.split(':')[0])
-            is_pm = start_hour >= 12
-            
-            # Convert end time based on whether start was PM
-            end_24h = convert_to_24hour(end, is_pm)
-            
-            if current_slot and current_slot["value"] == value and current_slot["end"] == start_24h:
-                current_slot["end"] = end_24h
-            else:
-                if current_slot:
-                    day_data.append(current_slot)
-                current_slot = {"start": start_24h, "end": end_24h, "value": value}
-            
-            previous_was_pm = is_pm
-            
+            if not start or not end:
+                continue
+                
+            try:
+                start_24h = convert_to_24hour(start)
+                start_hour = int(start_24h.split(':')[0])
+                is_pm = start_hour >= 12
+                end_24h = convert_to_24hour(end, previous_was_pm)
+                    
+                if current_slot and current_slot["value"] == value and current_slot["end"] == start_24h:
+                    current_slot["end"] = end_24h
+                else:
+                    if current_slot:
+                        day_data.append(current_slot)
+                    current_slot = {"start": start_24h, "end": end_24h, "value": value}
+                    
+                previous_was_pm = is_pm
+            except ValueError as e:
+                raise e
+                    
         if current_slot:
             day_data.append(current_slot)
+            
         table_data.append({"day": days[index], "data": day_data})
 
-    response_data = {
+
+    return {
         "data": table_data,
         "version": content_hash
     }
-    
-    return response_data
 
 
 @router.post("/download")
@@ -179,36 +194,35 @@ async def download_time_table_endpoint(request: TimeTableRequest):
     ```
     """
     filename = os.path.join(DRAFTS_FOLDER, request.filename)
-
-    table = get_table_from_cache(request.class_pattern, request.filename)
+    table = get_table_from_cache(request.filename, request.class_pattern)
 
     if table is None:
         table = get_time_table(filename, request.class_pattern).to_json(
             orient="records"
         )
         add_table_to_cache(
-            table=table, class_pattern=request.class_pattern, filename=request.filename
+            table=table, filename=request.filename, class_pattern=request.class_pattern
         )
+    
+    df = pd.DataFrame(json.loads(table))
+    buffer = BytesIO()
+    workbook = Workbook()
+    worksheet = workbook.active
 
-        df = pd.DataFrame(table)
-        buffer = BytesIO()
-        workbook = Workbook()
-        worksheet = workbook.active
+    for col_index, col_name in enumerate(df.columns, start=1):
+        worksheet.cell(row=1, column=col_index, value=col_name)
 
-        for col_index, col_name in enumerate(df.columns, start=1):
-            worksheet.cell(row=1, column=col_index, value=col_name)
+    for row_index, row in enumerate(df.itertuples(), start=2):
+        for col_index, value in enumerate(row[1:], start=1):
+            worksheet.cell(row=row_index, column=col_index, value=value)
 
-        for row_index, row in enumerate(df.itertuples(), start=2):
-            for col_index, value in enumerate(row[1:], start=1):
-                worksheet.cell(row=row_index, column=col_index, value=value)
+    workbook.save(buffer)
 
-        workbook.save(buffer)
-
-        excel_content = buffer.getvalue()
-        return FileResponse(
-            excel_content,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+    excel_content = buffer.getvalue()
+    return FileResponse(
+        excel_content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
 
 @router.post("/calendar_file")

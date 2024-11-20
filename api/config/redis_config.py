@@ -2,6 +2,8 @@ import redis
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 import logging
+import os
+import hashlib
 
 load_dotenv()
 
@@ -61,7 +63,23 @@ def get_table_from_cache(filename: str, class_pattern: str) -> str | None:
         The table string from the cache or None if not found.
     """
     try:
-        return r.get(create_cache_key_from_parameters(filename, class_pattern))
+        # Get the current file hash
+        file_path = os.path.join("api/drafts", f"{filename}.xlsx")
+        with open(file_path, "rb") as f:
+            current_hash = hashlib.md5(f.read()).hexdigest()
+        
+        # Get cached hash and data
+        cache_key = create_cache_key_from_parameters(filename, class_pattern)
+        hash_key = f"{cache_key}_hash"
+        
+        cached_hash = r.get(hash_key)
+        cached_data = r.get(cache_key)
+        
+        # Return data only if hash matches
+        if cached_hash and cached_data and cached_hash == current_hash:
+            return cached_data
+        return None
+        
     except redis.RedisError as e:
         logger.error(f"Error retrieving from cache: {e}")
         return None
@@ -83,10 +101,19 @@ def add_table_to_cache(table: str, filename: str, class_pattern: str, expire_sec
         Number of seconds until the cache entry expires (default: 1 hour)
     """
     try:
-        r.setex(
-            create_cache_key_from_parameters(filename, class_pattern),
-            expire_seconds,
-            table
-        )
+        # Calculate file hash
+        file_path = os.path.join("api/drafts", f"{filename}.xlsx")
+        with open(file_path, "rb") as f:
+            current_hash = hashlib.md5(f.read()).hexdigest()
+        
+        cache_key = create_cache_key_from_parameters(filename, class_pattern)
+        hash_key = f"{cache_key}_hash"
+        
+        # Store both data and hash with same expiration
+        pipe = r.pipeline()
+        pipe.setex(cache_key, expire_seconds, table)
+        pipe.setex(hash_key, expire_seconds, current_hash)
+        pipe.execute()
+        
     except redis.RedisError as e:
         logger.error(f"Error adding to cache: {e}")
