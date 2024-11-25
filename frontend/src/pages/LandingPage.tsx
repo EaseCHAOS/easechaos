@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { departments, years, type Department, type Year } from '../constants/departments';
 import easeChaosLogo from '../../assets/easechaos.png';
+import ThemeToggle from '../components/ThemeToggle';
+import clsx from 'clsx';
 
 
 
@@ -17,16 +19,30 @@ export default function LandingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center p-4 md:p-6 mx-auto">
+        <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto">
+            <div className="absolute top-0 w-full h-[60vh] bg-[url('../assets/light_pattern.svg')] dark:bg-[url('../assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-0 opacity-80" />
+
             <div className="relative max-w-4xl w-full text-center space-y-6">
-                <div className="absolute top-0 w-full h-[60vh] bg-[url('../assets/pattern.svg')] bg-cover bg-center opacity-10 bg-blend-darken" />
                 {/* Hero Section */}
                 <div className="space-y-6 text-center">
+                    <div className="flex justify-end px-4">
+                        <ThemeToggle />
+                    </div>
+
                     <a
                         href="https://github.com/Easechaos/easechaos"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group inline-flex items-center border border-gray-400 px-4 py-2 bg-gray-200 rounded-full text-md text-[#71717A] hover:bg-gray-100 transition-colors duration-200"
+                        className={clsx(
+                            'group inline-flex items-center',
+                            'border border-gray-400 dark:border-[#303030]',
+                            'px-4 py-2',
+                            'bg-gray-200 dark:bg-[#262626]',
+                            'rounded-full',
+                            'text-md text-[#71717A] dark:text-[#B2B2B2]',
+                            'hover:bg-gray-100 dark:hover:bg-[#303030]',
+                            'transition-colors duration-200'
+                        )}
                     >
                         Star us on GitHub
                         <span className="ml-2 group-hover:hidden z-10">→</span>
@@ -48,14 +64,14 @@ export default function LandingPage() {
                         </svg>
                     </a>
                     <div className="flex flex-row justify-center items-center p-4">
-                        <h1 className="mt-4 inline-block text-wrap bg-gradient-to-b from-gray-800 via-gray-700 to-gray-500 bg-clip-text text-transparent text-4xl font-semibold md:text-5xl xl:text-6xl xl:[line-height:1.125]">
+                        <h1 className="mt-4 inline-block text-wrap bg-gradient-to-b from-gray-800 via-gray-700 to-gray-500 dark:from-gray-100 dark:via-gray-200 dark:to-gray-300 bg-clip-text text-transparent text-4xl font-semibold md:text-5xl xl:text-6xl xl:[line-height:1.125]">
                             EaseCHAOS
                         </h1>
                         <img src={easeChaosLogo} alt="EaseCHAOS" className="w-15 h-10" />
 
                     </div>
 
-                    <p className="text-xl text-[#71717A] max-w-md mx-auto leading-relaxed">
+                    <p className="text-xl text-[#71717A] dark:text-[#B2B2B2] max-w-md mx-auto leading-relaxed">
                         Simplified academic schedules with intuitive viewing, and mobile-friendly.
                     </p>
 
@@ -63,12 +79,12 @@ export default function LandingPage() {
 
                 {/* Selector Section */}
                 <div className="relative w-full">
-                    <div className="relative z-10 shadow-sm bg-white border border-[#E4E4E7] rounded-lg p-4 space-y-4 max-w-sm mx-auto">
+                    <div className="relative z-10 shadow-sm bg-white dark:bg-[#262626] border border-[#E4E4E7] dark:border-[#303030] rounded-lg p-4 space-y-4 max-w-sm mx-auto">
                         <div className="space-y-4">
                             <select
                                 value={selectedDept}
                                 onChange={(e) => setSelectedDept(e.target.value as Department)}
-                                className="w-full bg-[#F4F4F5] p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full bg-[#F4F4F5] dark:bg-[#151B23] p-3 border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#B2B2B2]"
                             >
                                 <option value="">Select Department</option>
                                 {departments.map((dept) => (
@@ -81,7 +97,7 @@ export default function LandingPage() {
                             <select
                                 value={selectedYear ? selectedYear.name : ''}
                                 onChange={(e) => setSelectedYear(years.find(y => y.name === e.target.value) || '')}
-                                className="w-full p-3 bg-[#F4F4F5] border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full p-3 bg-[#F4F4F5] dark:bg-[#151B23] border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#B2B2B2]"
                             >
                                 <option value="">Select Year</option>
                                 {years.map((year) => (
@@ -108,15 +124,15 @@ export default function LandingPage() {
                 <div className="flex flex-wrap justify-center gap-6">
                     {/* Feature Card 1 - Link Shortening */}
                     <div className="w-[300px] max-w-full">
-                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white">
-                            <div className="flex flex-col space-y-1 p-6 justify-center items-center">
-                                <h3 className="font-semibold tracking-tight flex items-center gap-2 text-lg">
+                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#262626] dark:border-[#303030]">
+                            <div className="flex flex-col space-y-1.5 p-6 justify-center items-center">
+                                <h3 className="font-semibold tracking-tight flex items-center gap-2 text-lg dark:text-[#F0F6FC]">
                                     <svg className="h-5 w-5" fill="none" strokeWidth={1.5} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     Quick Access
                                 </h3>
-                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A]">
+                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A] dark:text-[#B2B2B2]">
                                     Instantly view your class schedule with just two selections.
                                 </p>
 
@@ -125,15 +141,15 @@ export default function LandingPage() {
                     </div>
 
                     <div className="w-[300px] max-w-full">
-                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white">
+                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#262626] dark:border-[#303030]">
                             <div className="flex flex-col space-y-1.5 p-6 justify-center items-center">
-                                <h3 className="font-semibold tracking-tight flex items-center gap-2 text-lg">
+                                <h3 className="font-semibold tracking-tight flex items-center gap-2 text-lg dark:text-[#F0F6FC]">
                                     <svg className="h-5 w-5" fill="none" strokeWidth={1.5} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                     </svg>
                                     Weekly Overview
                                 </h3>
-                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A]">
+                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A] dark:text-[#B2B2B2]">
                                     See your entire week at a glance with our intuitive calendar view
                                 </p>
 
@@ -142,15 +158,15 @@ export default function LandingPage() {
                     </div>
 
                     <div className="w-[300px] max-w-full">
-                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white">
+                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#262626] dark:border-[#303030]">
                             <div className="flex flex-col space-y-1.5 p-6 justify-center items-center">
-                                <h3 className="font-semibold tracking-tight flex items-center gap-2 text-lg">
+                                <h3 className="font-semibold tracking-tight flex items-center gap-2 text-lg dark:text-[#F0F6FC]">
                                     <svg className="h-5 w-5" fill="none" strokeWidth={1.5} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
                                     </svg>
                                     Mobile Friendly
                                 </h3>
-                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A]">
+                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A] dark:text-[#B2B2B2]">
                                     Access your schedule on any device, anywhere
                                 </p>
 
