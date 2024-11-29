@@ -48,7 +48,7 @@ export default function Calendar() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          filename: 'Draft_1',
+          filename: 'Draft_2',
           class_pattern: `${dept} ${year}`
         })
       });
@@ -156,14 +156,14 @@ export default function Calendar() {
 
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-[#02040A] p-4">
+    <div className="min-h-screen md:min-h-fit bg-gray-50 dark:bg-[#02040A] p-4">
       <div className={clsx(
-        "h-screen mx-auto",
+        "mx-auto",
         viewMode === 'week' ? "max-w-12xl" : "max-w-4xl"
       )}>
-        <div className="bg-white dark:bg-[#262626] rounded-lg shadow-lg h-full flex flex-col">
+        <div className="bg-white dark:bg-[#262626] rounded-lg shadow-lg min-h-fit flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-50 rounded-t-md">
+          <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-30 rounded-t-md">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
@@ -218,7 +218,7 @@ export default function Calendar() {
 
               <div className="flex items-center justify-center w-full sm:w-auto gap-4">
                 {viewMode === 'week' && (
-                  <div className='relative z-[10]'>
+                  <div className='relative z-[9999]'>
                     <div className='flex items-center gap-2'  onClick={() => setShowDownloadDropdown(!showDownloadDropdown)}>
                       <span className='text-sm font-medium dark:text-[#B2B2B2]'>Download</span>
                       <button
@@ -230,24 +230,24 @@ export default function Calendar() {
                       </button>
                     </div>
                     {showDownloadDropdown && (
-                      <div ref={downloadDropdownRef} className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[30] py-1">
+                      <div ref={downloadDropdownRef} className="absolute top-full right-0 mt-2 bg-white dark:bg-[#262626] rounded-lg shadow-xl border border-gray-200 dark:border-[#303030] py-1 z-[9999]">
                         <button
                           onClick={() => {
                             downloadElementAsPDF('week-schedule', 'Schedule.pdf');
                             setShowDownloadDropdown(false);
                           }}
-                          className="w-full px-4 py-1 text-left hover:bg-gray-100 border-b border-gray-200"
+                          className="w-full px-4 py-1 text-left hover:bg-gray-100 dark:hover:bg-[#3e3e3e] border-b border-gray-200 dark:border-[#303030]"
                         >
-                          <span className='text-sm'>PDF</span>
+                          <span className='text-sm dark:text-[#B2B2B2]'>PDF</span>
                         </button>
                         <button
                           onClick={() => {
                             downloadElementAsImage('week-schedule', 'Schedule.png');
                             setShowDownloadDropdown(false);
                           }}
-                          className="w-full px-4 py-1 text-left hover:bg-gray-100"
+                          className="w-full px-4 py-1 text-left hover:bg-gray-100 dark:hover:bg-[#3e3e3e]"
                         >
-                          <span className='text-sm'>Image</span>
+                          <span className='text-sm dark:text-[#B2B2B2]'>Image</span>
                         </button>
                       </div>
                     )}
@@ -306,7 +306,7 @@ export default function Calendar() {
           </div>
 
           {/* Calendar Grid - Modified to take remaining height */}
-          <div className="flex-1 overflow-auto">
+          <div className="overflow-auto z-0">
             <div className="px-4">
               <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
                 {viewMode === 'week' ? (

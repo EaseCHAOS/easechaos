@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { WeekSchedule } from '../types';
 import clsx from 'clsx';
 import { COURSE_CODES, COLOR_SCHEMES, DEFAULT_COLOR } from '../constants/courseCodes';
+import { useTheme } from '../context/ThemeContext'; 
 
 interface WeekViewProps {
   schedule: WeekSchedule;
@@ -28,7 +29,6 @@ function convertTimeToNumber(timeStr: string): number {
 function splitEventValue(value: string): string[] {
   const lines = value.split('\n').filter(Boolean);
 
-  // Check if lines contain the same course code
   const getCourseCode = (line: string) => {
     const match = line.match(/\b\d{3}\b/);
     return match ? match[0] : '';
@@ -36,7 +36,7 @@ function splitEventValue(value: string): string[] {
 
   const firstCourseCode = getCourseCode(lines[0]);
   if (lines.every(line => getCourseCode(line) === firstCourseCode)) {
-    return [lines[0]]; // Return only first occurrence if same course
+    return [lines[0]]; 
   }
 
   return lines;
@@ -79,10 +79,32 @@ export default function WeekView({ schedule }: WeekViewProps) {
   }, []);
 
   const getCourseColor = (value: string) => {
+    const { theme } = useTheme();
     const match = value.match(/\b\d{3}\b/);
     if (!match) return DEFAULT_COLOR;
-    return courseColorMap.get(match[0]) || DEFAULT_COLOR;
-  };
+  
+    const colorScheme = courseColorMap.get(match[0] as (typeof COURSE_CODES)[number]) || DEFAULT_COLOR;
+  
+    // Check for system theme if theme is set to 'system'
+    const isSystemTheme = theme === 'system';
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  
+    const currentTheme = isSystemTheme ? systemTheme : theme;
+  
+    if (currentTheme === 'dark') {
+      return {
+        bg: colorScheme.darkBg,
+        border: colorScheme.darkBorder,
+        text: colorScheme.darkText
+      };
+    }
+  
+    return {
+      bg: colorScheme.bg,
+      border: colorScheme.border,
+      text: colorScheme.text
+    };
+  }; 
 
   const processedSchedule = schedule.map(day => ({
     ...day,
@@ -142,9 +164,9 @@ export default function WeekView({ schedule }: WeekViewProps) {
   }));
 
   return (
-    <div className="relative w-full h-[calc(100vh-12rem)]">
+    <div className="relative w-full h-full">
       <div id="week-schedule" className="h-full overflow-x-auto bg-white dark:bg-[#262626]">
-        <div className="min-w-[1200px] md:min-w-0 pb-2">
+        <div className="min-w-[1800px] md:min-w-[1200px] pb-4">
           <div className="grid grid-cols-[45px_1fr] sticky top-0 bg-white dark:bg-[#262626] z-10 py-2">
             <div className="h-4"/>
             <div className="grid grid-cols-25 relative pl-[3.7%]">
@@ -164,7 +186,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
           </div>
 
           {/* Days and events grid */}
-          <div className="space-y-[0.08rem] relative bg-white dark:bg-[#262626] z-[100] h-full">
+          <div className="space-y-[0.1rem] relative bg-white dark:bg-[#262626] z-[100] h-full">
             {/* Time indicator */}
             {currentTimePosition !== null && (
               <div
@@ -200,7 +222,9 @@ export default function WeekView({ schedule }: WeekViewProps) {
                           className={clsx(
                             "border-l border-gray-200 dark:border-[#303030] h-full",
                             index === 0 && "border-l-0",
-                            index === timeSlots.length - 1 && "border-r"
+                            index === timeSlots.length - 1 && "border-r",
+                            (index % 2 !== 0) ? "bg-gray-100 dark:bg-inherit" : "bg-gray-200 dark:bg-[#303030]"
+
                           )}
                         />
                       ))}
