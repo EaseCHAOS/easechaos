@@ -19,8 +19,8 @@ export default function LandingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto">
-            <div className="absolute top-0 w-full h-[60vh] bg-[url('../assets/light_pattern.svg')] dark:bg-[url('../assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-0 opacity-80" />
+        <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto overflow-hidden">
+            <div className="absolute top-0 w-full h-[80vh] bg-[url('../assets/light_pattern.svg')] dark:bg-[url('../assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-100 opacity-75" />
 
             <div className="relative max-w-4xl w-full text-center space-y-6">
                 {/* Hero Section */}
@@ -37,9 +37,9 @@ export default function LandingPage() {
                             'group inline-flex items-center',
                             'border border-gray-400 dark:border-[#303030]',
                             'px-4 py-2',
-                            'bg-gray-200 dark:bg-[#262626]',
+                            'bg-gray-200 dark:bg-[#09090B]',
                             'rounded-full',
-                            'text-md text-[#71717A] dark:text-[#B2B2B2]',
+                            'text-md text-[#71717A] dark:text-[#D4D4D8]',
                             'hover:bg-gray-100 dark:hover:bg-[#303030]',
                             'transition-colors duration-200'
                         )}
@@ -71,7 +71,7 @@ export default function LandingPage() {
 
                     </div>
 
-                    <p className="text-xl text-[#71717A] dark:text-[#B2B2B2] max-w-md mx-auto leading-relaxed">
+                    <p className="text-xl text-[#71717A] dark:text-[#D4D4D8] max-w-md mx-auto leading-relaxed">
                         Simplified academic schedules with intuitive viewing, and mobile-friendly.
                     </p>
 
@@ -79,12 +79,12 @@ export default function LandingPage() {
 
                 {/* Selector Section */}
                 <div className="relative w-full">
-                    <div className="relative z-10 shadow-sm bg-white dark:bg-[#262626] border border-[#E4E4E7] dark:border-[#303030] rounded-lg p-4 space-y-4 max-w-sm mx-auto">
+                    <div className="relative z-10 shadow-sm bg-white dark:bg-[#09090B] border border-[#E4E4E7] dark:border-[#303030] rounded-lg p-4 space-y-4 max-w-sm mx-auto">
                         <div className="space-y-4">
                             <select
                                 value={selectedDept}
                                 onChange={(e) => setSelectedDept(e.target.value as Department)}
-                                className="w-full bg-[#F4F4F5] dark:bg-[#151B23] p-3 border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#B2B2B2]"
+                                className="w-full bg-[#F4F4F5] dark:bg-[#262626] p-3 border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#D4D4D8]"
                             >
                                 <option value="">Select Department</option>
                                 {departments.map((dept) => (
@@ -97,7 +97,7 @@ export default function LandingPage() {
                             <select
                                 value={selectedYear ? selectedYear.name : ''}
                                 onChange={(e) => setSelectedYear(years.find(y => y.name === e.target.value) || '')}
-                                className="w-full p-3 bg-[#F4F4F5] dark:bg-[#151B23] border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#B2B2B2]"
+                                className="w-full p-3 bg-[#F4F4F5] dark:bg-[#303030] border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#D4D4D8]"
                             >
                                 <option value="">Select Year</option>
                                 {years.map((year) => (
@@ -111,7 +111,7 @@ export default function LandingPage() {
                         <button
                             onClick={handleViewSchedule}
                             disabled={!selectedDept || !selectedYear}
-                            className="w-full bg-[#18181B] text-white py-4 px-6 rounded-md hover:bg-[#18181B]-700 
+                            className="w-full bg-[#52525B] text-white py-4 px-6 rounded-md hover:bg-[#18181B]-700 
                      disabled:bg-[#F4F4F5] disabled:text-[#18181B] disabled:cursor-not-allowed
                      transition-colors duration-200"
                         >
@@ -124,7 +124,7 @@ export default function LandingPage() {
                 <div className="flex flex-wrap justify-center gap-6">
                     {/* Feature Card 1 - Link Shortening */}
                     <div className="w-[300px] max-w-full">
-                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#262626] dark:border-[#303030]">
+                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#09090B] dark:border-[#303030]">
                             <div className="flex flex-col space-y-1.5 p-6 justify-center items-center">
                                 <h3 className="font-semibold tracking-tight flex items-center gap-2 text-lg dark:text-[#F0F6FC]">
                                     <svg className="h-5 w-5" fill="none" strokeWidth={1.5} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -132,7 +132,7 @@ export default function LandingPage() {
                                     </svg>
                                     Quick Access
                                 </h3>
-                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A] dark:text-[#B2B2B2]">
+                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A] dark:text-[#D4D4D8]">
                                     Instantly view your class schedule with just two selections.
                                 </p>
 
@@ -141,7 +141,7 @@ export default function LandingPage() {
                     </div>
 
                     <div className="w-[300px] max-w-full">
-                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#262626] dark:border-[#303030]">
+                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#09090B] dark:border-[#303030]">
                             <div className="flex flex-col space-y-1.5 p-6 justify-center items-center">
                                 <h3 className="font-semibold tracking-tight flex items-center gap-2 text-lg dark:text-[#F0F6FC]">
                                     <svg className="h-5 w-5" fill="none" strokeWidth={1.5} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -149,7 +149,7 @@ export default function LandingPage() {
                                     </svg>
                                     Weekly Overview
                                 </h3>
-                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A] dark:text-[#B2B2B2]">
+                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A] dark:text-[#D4D4D8]">
                                     See your entire week at a glance with our intuitive calendar view
                                 </p>
 
@@ -158,7 +158,7 @@ export default function LandingPage() {
                     </div>
 
                     <div className="w-[300px] max-w-full">
-                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#262626] dark:border-[#303030]">
+                        <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#09090B] dark:border-[#303030]">
                             <div className="flex flex-col space-y-1.5 p-6 justify-center items-center">
                                 <h3 className="font-semibold tracking-tight flex items-center gap-2 text-lg dark:text-[#F0F6FC]">
                                     <svg className="h-5 w-5" fill="none" strokeWidth={1.5} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -166,7 +166,7 @@ export default function LandingPage() {
                                     </svg>
                                     Mobile Friendly
                                 </h3>
-                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A] dark:text-[#B2B2B2]">
+                                <p className="text-md pt-2 pb-4 mx-4 leading-7 text-[#71717A] dark:text-[#D4D4D8]">
                                     Access your schedule on any device, anywhere
                                 </p>
 

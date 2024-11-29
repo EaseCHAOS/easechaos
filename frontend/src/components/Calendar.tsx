@@ -156,24 +156,24 @@ export default function Calendar() {
 
 
   return (
-    <div className="h-screen bg-gray-50 p-4">
+    <div className="h-screen bg-gray-50 dark:bg-[#02040A] p-4">
       <div className={clsx(
         "h-screen mx-auto",
         viewMode === 'week' ? "max-w-12xl" : "max-w-4xl"
       )}>
-        <div className="bg-white rounded-lg shadow-lg h-full flex flex-col">
+        <div className="bg-white dark:bg-[#262626] rounded-lg shadow-lg h-full flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b sticky top-0 bg-white z-50">
+          <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-50 rounded-t-md">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
                   <a
                     href="/"
-                    className="border border-[#1B1B1B] p-1.5 rounded-md hover:bg-gray-100"
+                    className="border border-[#1B1B1B] dark:border-[#303030] p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-[#303030]"
                   >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4 dark:text-[#B2B2B2]" />
                   </a>
-                  <h1 className="text-2xl font-bold">
+                  <h1 className="text-2xl font-bold dark:text-[#F0F6FC]">
                     {viewMode === 'week'
                       ? "Week's Schedule"
                       : format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
@@ -185,7 +185,7 @@ export default function Calendar() {
                   <div className="relative">
                     <button
                       onClick={() => setShowDatePicker(!showDatePicker)}
-                      className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100"
+                      className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 dark:text-[#F0F6FC]"
                     >
                       <CalendarIcon className="w-5 h-5" />
                       <span>{format(selectedDate, 'MMM d, yyyy')}</span>
@@ -218,12 +218,11 @@ export default function Calendar() {
 
               <div className="flex items-center justify-center w-full sm:w-auto gap-4">
                 {viewMode === 'week' && (
-                  <div className='relative'>
-                    <div className='flex items-center gap-2'>
-                      <span className='text-sm font-medium'>Download</span>
+                  <div className='relative z-[10]'>
+                    <div className='flex items-center gap-2'  onClick={() => setShowDownloadDropdown(!showDownloadDropdown)}>
+                      <span className='text-sm font-medium dark:text-[#B2B2B2]'>Download</span>
                       <button
-                        onClick={() => setShowDownloadDropdown(!showDownloadDropdown)}
-                        className="p-1 rounded-full border-2 border-gray-600 flex items-center"
+                        className="p-1 rounded-full border-2 border-gray-600 flex items-center dark:border-[#B2B2B2] dark:text-[#B2B2B2]"
                       >
                         <svg className='w-2 h-2' data-slot="icon" fill="none" strokeWidth="4" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3"></path>
@@ -231,7 +230,7 @@ export default function Calendar() {
                       </button>
                     </div>
                     {showDownloadDropdown && (
-                      <div ref={downloadDropdownRef} className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[1100] py-1">
+                      <div ref={downloadDropdownRef} className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[30] py-1">
                         <button
                           onClick={() => {
                             downloadElementAsPDF('week-schedule', 'Schedule.pdf');
@@ -255,24 +254,24 @@ export default function Calendar() {
                   </div>
                 )}
 
-                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <div className="flex items-center bg-gray-100 dark:bg-[#303030] rounded-lg p-1 z-[1]">
                   <button
                     onClick={() => setViewMode('week')}
                     className={clsx(
                       "p-2 rounded-md",
-                      viewMode === 'week' ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                      viewMode === 'week' ? "bg-white dark:bg-[#262626] shadow-sm" : "hover:bg-gray-200 dark:hover:bg-[#3e3e3e]" 
                     )}
                   >
-                    <LayoutGrid className="w-5 h-5" />
+                    <LayoutGrid className="w-5 h-5 dark:text-[#B2B2B2]" />
                   </button>
                   <button
                     onClick={() => setViewMode('day')}
                     className={clsx(
                       "p-2 rounded-md",
-                      viewMode === 'day' ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                      viewMode === 'day' ? "bg-white dark:bg-[#262626] shadow-sm" : "hover:bg-gray-200 dark:hover:bg-[#3e3e3e]"
                     )}
                   >
-                    <CalendarDayIcon className="w-5 h-5" />
+                    <CalendarDayIcon className="w-5 h-5 dark:text-[#B2B2B2]" />
                   </button>
                 </div>
 
@@ -284,10 +283,10 @@ export default function Calendar() {
                         newDate.setDate(newDate.getDate() - 1);
                         setSelectedDate(newDate);
                       }}
-                      className="p-2 rounded-md hover:bg-gray-100"
+                      className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#3e3e3e]"
                       disabled={selectedDate.getDay() === 1}
                     >
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft className="w-5 h-5 dark:text-[#B2B2B2]" />
                     </button>
                     <button
                       onClick={() => {
@@ -295,10 +294,10 @@ export default function Calendar() {
                         newDate.setDate(newDate.getDate() + 1);
                         setSelectedDate(newDate);
                       }}
-                      className="p-2 rounded-md hover:bg-gray-100"
+                      className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#3e3e3e]"
                       disabled={selectedDate.getDay() === 5}
                     >
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight className="w-5 h-5 dark:text-[#B2B2B2]" />
                     </button>
                   </div>
                 )}
