@@ -143,13 +143,13 @@ export default function DayView({ schedule }: DayViewProps) {
   }, []);
 
   return (
-    <div className="w-full h-[calc(100vh-8rem)]">
+    <div className="w-full h-[calc(100vh-8rem)] dark:bg-[#262626]">
       <div className="grid grid-cols-[45px_1fr] sm:grid-cols-[50px_1fr] gap-4 h-full relative pt-4 pb-6">
         <div className="sticky left-0 h-full">
           {timeSlots.map((time, index) => (
             <div
               key={time}
-              className="absolute text-xs sm:text-sm text-gray-700"
+              className="absolute text-xs sm:text-sm text-gray-700 dark:text-[#B2B2B2]"
               style={{
                 top: `${(index / (timeSlots.length - 1)) * 100}%`,
                 right: '0.5rem sm:1rem',
@@ -161,19 +161,19 @@ export default function DayView({ schedule }: DayViewProps) {
           ))}
         </div>
 
-        <div className="relative border-l border-gray-200 pt-2 h-full">
+        <div className="relative border-l border-gray-200 dark:border-[#303030] pt-2 h-full">
           {currentTimePosition !== null && (
             <div 
-              className="absolute w-full h-[2px] bg-gray-500 z-10 mt-[60px]"
+              className="absolute w-full h-[2px] bg-gray-500 dark:bg-[#4593F8] z-10"
               style={{ 
-                top: `${currentTimePosition}%`,  
+                top: `${currentTimePosition}%`,
                 transform: 'translateY(-50%)'
-              }} 
+              }}
             >
               <div 
-                className="absolute left-0 w-2 h-2 rounded-full bg-gray-500" 
-                style={{ transform: 'translate(-50%, -34%)' }} 
-              /> 
+                className="absolute left-0 w-2 h-2 rounded-full bg-gray-500 dark:bg-[#4593F8]" 
+                style={{ transform: 'translate(-50%, -25%)' }}
+              />
             </div>
           )}
 
@@ -181,7 +181,7 @@ export default function DayView({ schedule }: DayViewProps) {
             {timeSlots.map((hour, index) => (
               <div
                 key={hour}
-                className="absolute w-full border-t border-gray-200"
+                className="absolute w-full border-t border-gray-200 dark:border-[#303030]"
                 style={{ top: `${(index / (timeSlots.length - 1)) * 100}%` }}
               />
             ))}

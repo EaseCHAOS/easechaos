@@ -12,6 +12,13 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
   
+  body {
+    @apply bg-[#FAFAFA] dark:bg-[#02040A];
+    min-height: 100vh;
+    /* Extend the background color beyond the viewport */
+    min-height: -webkit-fill-available;
+  }
+  
   /* Force font weights on iOS */
   strong, b, h1, h2, h3, h4, h5, h6, 
   .font-bold, .font-semibold, .font-medium {
