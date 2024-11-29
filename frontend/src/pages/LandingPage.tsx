@@ -20,7 +20,7 @@ export default function LandingPage() {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto overflow-hidden">
-            <div className="absolute top-0 w-full h-[80vh] bg-[url('../assets/light_pattern.svg')] dark:bg-[url('../assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-100 opacity-75" />
+            <div className="absolute top-0 w-full h-[60vh] bg-[url('../assets/light_pattern.svg')] dark:bg-[url('../assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-100 opacity-75" />
 
             <div className="relative max-w-4xl w-full text-center space-y-6">
                 {/* Hero Section */}
