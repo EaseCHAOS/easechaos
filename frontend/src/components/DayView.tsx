@@ -2,6 +2,8 @@ import React from 'react';
 import { DaySchedule } from '../types';
 import clsx from 'clsx';
 import { COURSE_CODES, COLOR_SCHEMES, DEFAULT_COLOR } from '../constants/courseCodes';
+import { useTheme } from '../context/ThemeContext'; // Import the theme hook
+
 
 interface DayViewProps {
   schedule?: DaySchedule;
@@ -44,10 +46,31 @@ const courseColorMap = new Map(
 );
 
 const getCourseColor = (value: string) => {
+  const { theme } = useTheme();
   const match = value.match(/\b\d{3}\b/);
   if (!match) return DEFAULT_COLOR;
-  return courseColorMap.get(match[0] as (typeof COURSE_CODES)[number]) || DEFAULT_COLOR;
-};
+  
+  const colorScheme = courseColorMap.get(match[0] as (typeof COURSE_CODES)[number]) || DEFAULT_COLOR;
+  
+  const isSystemTheme = theme === 'system';
+  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  
+  const currentTheme = isSystemTheme ? systemTheme : theme;
+  
+  if (currentTheme === 'dark') {
+    return {
+      bg: colorScheme.darkBg,
+      border: colorScheme.darkBorder,
+      text: colorScheme.darkText
+    };
+  }
+  
+  return {
+    bg: colorScheme.bg,
+    border: colorScheme.border,
+    text: colorScheme.text
+  };
+}; 
 
 function splitEventValue(value: string): string[] {
   return value.split('\n').filter(Boolean);
@@ -149,7 +172,8 @@ export default function DayView({ schedule }: DayViewProps) {
           {timeSlots.map((time, index) => (
             <div
               key={time}
-              className="absolute text-xs sm:text-sm text-gray-700 dark:text-[#B2B2B2]"
+              className={clsx(
+                "absolute text-xs sm:text-sm text-gray-700 dark:text-[#B2B2B2]"              )}
               style={{
                 top: `${(index / (timeSlots.length - 1)) * 100}%`,
                 right: '0.5rem sm:1rem',
@@ -181,8 +205,14 @@ export default function DayView({ schedule }: DayViewProps) {
             {timeSlots.map((hour, index) => (
               <div
                 key={hour}
-                className="absolute w-full border-t border-gray-200 dark:border-[#303030]"
-                style={{ top: `${(index / (timeSlots.length - 1)) * 100}%` }}
+                className={clsx(
+                  "absolute w-full border-t border-gray-200 dark:border-[#303030]",
+                  (index % 2 !== 0) ? "bg-gray-100 dark:bg-inherit" : "bg-gray-200 dark:bg-[#303030]"
+                )}
+                style={{ 
+                  top: `${(index / (timeSlots.length - 1)) * 100}%`,
+                  height: `${(index % 2 === 0 ? 100 / (timeSlots.length - 1) : 0)}%`,
+                  paddingTop: `${(index % 2 === 0 ? 0 : 50)}%`                }}
               />
             ))}
           </div>
