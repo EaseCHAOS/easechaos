@@ -166,9 +166,9 @@ export default function DayView({ schedule }: DayViewProps) {
   }, []);
 
   return (
-    <div className="w-full h-[calc(100vh-8rem)] dark:bg-[#262626]">
+    <div className="w-full h-[calc(100vh)] sm:h-[calc(90vh)] overflow-clip dark:bg-[#262626]">
       <div className="grid grid-cols-[45px_1fr] sm:grid-cols-[50px_1fr] gap-4 h-full relative pt-4 pb-6">
-        <div className="sticky left-0 h-full">
+        <div className="sticky left-0 min-h-fit">
           {timeSlots.map((time, index) => (
             <div
               key={time}
@@ -185,7 +185,7 @@ export default function DayView({ schedule }: DayViewProps) {
           ))}
         </div>
 
-        <div className="relative border-l border-gray-200 dark:border-[#303030] pt-2 h-full">
+        <div className="relative border-l border-gray-200 dark:border-[#303030] pt-2 min-h-4">
           {currentTimePosition !== null && (
             <div 
               className="absolute w-full h-[2px] bg-gray-500 dark:bg-[#4593F8] z-10"

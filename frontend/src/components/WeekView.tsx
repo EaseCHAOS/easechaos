@@ -164,7 +164,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
   }));
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-[calc(80vh)] overflow-clip">
       <div id="week-schedule" className="h-full overflow-x-auto bg-white dark:bg-[#262626]">
         <div className="min-w-[1800px] md:min-w-[1200px] pb-4">
           <div className="grid grid-cols-[45px_1fr] sticky top-0 bg-white dark:bg-[#262626] z-10 py-2">
@@ -186,7 +186,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
           </div>
 
           {/* Days and events grid */}
-          <div className="space-y-[0.1rem] relative bg-white dark:bg-[#262626] z-[100] h-full">
+          <div className="space-y-[0.1rem] relative bg-white dark:bg-[#262626] z-[100]">
             {/* Time indicator */}
             {currentTimePosition !== null && (
               <div
@@ -207,7 +207,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
               const daySchedule = processedSchedule.find((s) => s.day === day);
 
               return (
-                <div key={day} className="grid grid-cols-[37px_1fr] sm:grid-cols-[45px_1fr] gap-2 h-[calc((100vh-16rem)/5)]">
+                <div key={day} className="grid grid-cols-[37px_1fr] sm:grid-cols-[45px_1fr] gap-2 min-h-28">
                   <div className="font-medium bg-white dark:bg-[#262626] text-gray-700 dark:text-[#B2B2B2] text-[14px] py-2 sticky left-0 flex z-[100]">
                     {dayAbbreviations[day]}
                   </div>
@@ -224,7 +224,6 @@ export default function WeekView({ schedule }: WeekViewProps) {
                             index === 0 && "border-l-0",
                             index === timeSlots.length - 1 && "border-r",
                             (index % 2 !== 0) ? "bg-gray-100 dark:bg-inherit" : "bg-gray-200 dark:bg-[#303030]"
-
                           )}
                         />
                       ))}
