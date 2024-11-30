@@ -21,8 +21,8 @@ The application currently features:
 - ✅ Weekly view with all classes
 - ✅ Daily detailed view
 - ✅ Class filtering system
-- ✅ Responsive design
-- ✅ Calendar export functionality (ui not done)
+- ✅ Responsive design with Light and Dark Theme
+- ✅ Calendar download (PDF & Image)
 
 ## Getting Started
 
@@ -64,9 +64,15 @@ NB: This project is still under development.
 
 ### Current Progress
 
+#### Light Theme
 <img src="docs/screenshot2.jpeg" width="900">
 <img src="docs/screenshot.jpeg" width="900">
 <img src="docs/screenshot1.jpeg" width="900">
+
+#### Dark Theme
+<img src="docs/screenshot3.png" width="900">
+<img src="docs/screenshot4.png" width="900">
+<img src="docs/screenshot5.png" width="900">
 
 
 ## Contributors
