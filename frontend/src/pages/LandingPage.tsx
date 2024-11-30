@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { departments, years, type Department, type Year } from '../constants/departments';
 import easeChaosLogo from '../../assets/easechaos.png';
@@ -11,6 +11,20 @@ export default function LandingPage() {
     const [selectedDept, setSelectedDept] = useState<Department | ''>('');
     const [selectedYear, setSelectedYear] = useState<Year | ''>('');
     const navigate = useNavigate();
+    const [showNotification, setShowNotification] = useState(false); 
+    const [fadeOut, setFadeOut] = useState(false); 
+
+    useEffect(() => {
+        setShowNotification(true); 
+        const timer = setTimeout(() => {
+            setFadeOut(true); 
+            const hideTimer = setTimeout(() => {
+                setShowNotification(false); 
+            }, 500); 
+            return () => clearTimeout(hideTimer); 
+        }, 5000);
+        return () => clearTimeout(timer); 
+    }, []);
 
     const handleViewSchedule = () => {
         if (selectedDept && selectedYear) {
@@ -19,9 +33,18 @@ export default function LandingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto overflow-hidden">
+        <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto overflow-hidden relative">
             <div className="absolute top-0 w-full h-[60vh] bg-[url('../assets/light_pattern.svg')] dark:bg-[url('../assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-100 opacity-75" />
 
+            {showNotification && (
+                <div className={`absolute top-6 flex items-center px-3 py-2 bg-green-400 border-2 border-green-700 rounded-full z-10 ${fadeOut ? 'animate-fade-out' : 'animate-slide-in'}`}>
+                    <svg width="16px" height="16px" viewBox="0 0 24 24" stroke-width="1.5" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative size-5">
+                        <path d="M8 15C12.8747 15 15 12.949 15 8C15 12.949 17.1104 15 22 15C17.1104 15 15 17.1104 15 22C15 17.1104 12.8747 15 8 15Z" stroke-width="1.5" stroke-linejoin="round" className="stroke-green-700"></path>
+                        <path d="M2 6.5C5.13376 6.5 6.5 5.18153 6.5 2C6.5 5.18153 7.85669 6.5 11 6.5C7.85669 6.5 6.5 7.85669 6.5 11C6.5 7.85669 5.13376 6.5 2 6.5Z" stroke-width="1.5" stroke-linejoin="round" className="stroke-green-700"></path>
+                    </svg>
+                    <span className='text-sm text-green-900'>Coming soon: Examination schedule view</span>
+                </div>
+            )}
             <div className="relative max-w-4xl w-full text-center space-y-6">
                 {/* Hero Section */}
                 <div className="space-y-6 text-center">
@@ -122,7 +145,6 @@ export default function LandingPage() {
 
                 {/* Features Section */}
                 <div className="flex flex-wrap justify-center gap-6">
-                    {/* Feature Card 1 - Link Shortening */}
                     <div className="w-[300px] max-w-full">
                         <div className="text-card-foreground shadow-sm relative overflow-hidden rounded-xl border bg-white dark:bg-[#09090B] dark:border-[#303030]">
                             <div className="flex flex-col space-y-1.5 p-6 justify-center items-center">
@@ -174,29 +196,29 @@ export default function LandingPage() {
                         </div>
                     </div>
                 </div>
-                
+
             </div >
 
             <footer className="px-4 py-6 ">
-                    <div className="container flex items-center justify-center p-0">
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2 h-6 w-6 dark:text-[#F0F6FC]">
-                            <path d="M9.96424 2.68571C10.0668 2.42931 9.94209 2.13833 9.6857 2.03577C9.4293 1.93322 9.13832 2.05792 9.03576 2.31432L5.03576 12.3143C4.9332 12.5707 5.05791 12.8617 5.3143 12.9642C5.5707 13.0668 5.86168 12.9421 5.96424 12.6857L9.96424 2.68571ZM3.85355 5.14646C4.04882 5.34172 4.04882 5.6583 3.85355 5.85356L2.20711 7.50001L3.85355 9.14646C4.04882 9.34172 4.04882 9.6583 3.85355 9.85356C3.65829 10.0488 3.34171 10.0488 3.14645 9.85356L1.14645 7.85356C0.951184 7.6583 0.951184 7.34172 1.14645 7.14646L3.14645 5.14646C3.34171 4.9512 3.65829 4.9512 3.85355 5.14646ZM11.1464 5.14646C11.3417 4.9512 11.6583 4.9512 11.8536 5.14646L13.8536 7.14646C14.0488 7.34172 14.0488 7.6583 13.8536 7.85356L11.8536 9.85356C11.6583 10.0488 11.3417 10.0488 11.1464 9.85356C10.9512 9.6583 10.9512 9.34172 11.1464 9.14646L12.7929 7.50001L11.1464 5.85356C10.9512 5.6583 10.9512 5.34172 11.1464 5.14646Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd">
-                            </path>
-                        </svg>
-                        <p className="text-sm dark:text-[#F0F6FC]">
-                            Built by <a className="underline underline-offset-4" href="https://github.com/0xdvc">
-                                Ohene Neil
-                            </a>, <a className="underline underline-offset-4" href="https://github.com/aaron-ontoyin">
-                                Aaron Ontoyin
-                            </a> and <a className="underline underline-offset-4" href="https://github.com/db-keli">
-                                Kekeli Dompeh
-                            </a>.
+                <div className="container flex items-center justify-center p-0">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2 h-6 w-6 dark:text-[#F0F6FC]">
+                        <path d="M9.96424 2.68571C10.0668 2.42931 9.94209 2.13833 9.6857 2.03577C9.4293 1.93322 9.13832 2.05792 9.03576 2.31432L5.03576 12.3143C4.9332 12.5707 5.05791 12.8617 5.3143 12.9642C5.5707 13.0668 5.86168 12.9421 5.96424 12.6857L9.96424 2.68571ZM3.85355 5.14646C4.04882 5.34172 4.04882 5.6583 3.85355 5.85356L2.20711 7.50001L3.85355 9.14646C4.04882 9.34172 4.04882 9.6583 3.85355 9.85356C3.65829 10.0488 3.34171 10.0488 3.14645 9.85356L1.14645 7.85356C0.951184 7.6583 0.951184 7.34172 1.14645 7.14646L3.14645 5.14646C3.34171 4.9512 3.65829 4.9512 3.85355 5.14646ZM11.1464 5.14646C11.3417 4.9512 11.6583 4.9512 11.8536 5.14646L13.8536 7.14646C14.0488 7.34172 14.0488 7.6583 13.8536 7.85356L11.8536 9.85356C11.6583 10.0488 11.3417 10.0488 11.1464 9.85356C10.9512 9.6583 10.9512 9.34172 11.1464 9.14646L12.7929 7.50001L11.1464 5.85356C10.9512 5.6583 10.9512 5.34172 11.1464 5.14646Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd">
+                        </path>
+                    </svg>
+                    <p className="text-sm dark:text-[#F0F6FC]">
+                        Built by <a className="underline underline-offset-4" href="https://github.com/0xdvc">
+                            Ohene Neil
+                        </a>, <a className="underline underline-offset-4" href="https://github.com/aaron-ontoyin">
+                            Aaron Ontoyin
+                        </a> and <a className="underline underline-offset-4" href="https://github.com/db-keli">
+                            Kekeli Dompeh
+                        </a>.
 
-                            Get the source code from <a className="underline underline-offset-4" href="https://github.com/Easechaos/easechaos">
-                                GitHub</a>.
-                        </p>
-                    </div>
-                </footer>
+                        Get the source code from <a className="underline underline-offset-4" href="https://github.com/Easechaos/easechaos">
+                            GitHub</a>.
+                    </p>
+                </div>
+            </footer>
         </div >
     );
 } 
