@@ -7,6 +7,7 @@ import { WeekSchedule } from '../types';
 import 'react-day-picker/dist/style.css';
 import { useParams } from 'react-router-dom';
 import { downloadElementAsImage, downloadElementAsPDF } from '../utils/downloadUtils';
+import ThemeToggle from './ThemeToggle';
 
 
 type ViewMode = 'day' | 'week';
@@ -30,7 +31,7 @@ export default function Calendar() {
   const fetchSchedule = async (dept: string, year: string) => {
     const cacheKey = `schedule:${dept}:${year}`;
     const versionKey = `${cacheKey}:version`;
-    
+
     const cachedData = localStorage.getItem(cacheKey);
     const cachedVersion = localStorage.getItem(versionKey);
 
@@ -56,7 +57,7 @@ export default function Calendar() {
       if (!response.ok) return;
 
       const { data, version } = await response.json();
-      
+
       if (version !== cachedVersion || JSON.stringify(data) !== cachedData) {
         localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
         localStorage.setItem(`schedule:${dept}:${year}:version`, version);
@@ -87,7 +88,7 @@ export default function Calendar() {
     return data;
   };
 
-  
+
   useEffect(() => {
     setError(null);
 
@@ -156,12 +157,12 @@ export default function Calendar() {
 
 
   return (
-    <div className="min-h-screen md:min-h-fit bg-gray-50 dark:bg-[#02040A] p-4">
+    <div className="bg-gray-50 dark:bg-[#02040A] p-4">
       <div className={clsx(
         "mx-auto",
         viewMode === 'week' ? "max-w-12xl" : "max-w-4xl"
       )}>
-        <div className="bg-white dark:bg-[#262626] rounded-lg shadow-lg min-h-fit flex flex-col">
+        <div className="bg-white dark:bg-[#262626] rounded-lg shadow-lg flex flex-col">
           {/* Header */}
           <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-30 rounded-t-md">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -216,10 +217,14 @@ export default function Calendar() {
                 )}
               </div>
 
+
               <div className="flex items-center justify-center w-full sm:w-auto gap-4">
+              <div className="flex">
+                <ThemeToggle />
+              </div>
                 {viewMode === 'week' && (
                   <div className='relative z-[9999]'>
-                    <div className='flex items-center gap-2'  onClick={() => setShowDownloadDropdown(!showDownloadDropdown)}>
+                    <div className='flex items-center gap-2' onClick={() => setShowDownloadDropdown(!showDownloadDropdown)}>
                       <span className='text-sm font-medium dark:text-[#B2B2B2]'>Download</span>
                       <button
                         className="p-1 rounded-full border-2 border-gray-600 flex items-center dark:border-[#B2B2B2] dark:text-[#B2B2B2]"
@@ -259,7 +264,7 @@ export default function Calendar() {
                     onClick={() => setViewMode('week')}
                     className={clsx(
                       "p-2 rounded-md",
-                      viewMode === 'week' ? "bg-white dark:bg-[#262626] shadow-sm" : "hover:bg-gray-200 dark:hover:bg-[#3e3e3e]" 
+                      viewMode === 'week' ? "bg-white dark:bg-[#262626] shadow-sm" : "hover:bg-gray-200 dark:hover:bg-[#3e3e3e]"
                     )}
                   >
                     <LayoutGrid className="w-5 h-5 dark:text-[#B2B2B2]" />
@@ -306,7 +311,7 @@ export default function Calendar() {
           </div>
 
           {/* Calendar Grid - Modified to take remaining height */}
-          <div className="overflow-auto z-0">
+          <div className="overflow-auto z-0 min-h-fit">
             <div className="px-4">
               <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
                 {viewMode === 'week' ? (

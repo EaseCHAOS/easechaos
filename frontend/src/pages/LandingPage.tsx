@@ -45,9 +45,9 @@ export default function LandingPage() {
                         )}
                     >
                         Star us on GitHub
-                        <span className="ml-2 group-hover:hidden z-10">→</span>
+                        <span className="ml-2 group-hover:hidden">→</span>
                         <svg
-                            className="ml-2 w-4 h-4 hidden group-hover:block z-10"
+                            className="ml-2 w-4 h-4 hidden group-hover:block"
                             fill="none"
                             strokeWidth={2}
                             stroke="currentColor"
