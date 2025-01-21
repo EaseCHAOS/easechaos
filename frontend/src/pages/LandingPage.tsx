@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { departments, years, type Department, type Year } from '../constants/departments';
-import easeChaosLogo from '../../public/assets/easechaos.png';
+import easeChaosLogo from '../../assets/easechaos.png';
 import ThemeToggle from '../components/ThemeToggle';
 import clsx from 'clsx';
 
@@ -34,7 +34,7 @@ export default function LandingPage() {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto overflow-hidden relative">
-            <div className="absolute top-0 w-full h-[60vh] dark:h-[70vh] bg-[url('../public/assets/light_pattern.svg')] dark:bg-[url('../public/assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-15 opacity-65" />
+            <div className="absolute top-0 w-full h-[60vh] dark:h-[70vh] bg-[url('../assets/light_pattern.svg')] dark:bg-[url('../assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-15 opacity-65" />
 
             {showNotification && (
                 <div className={`absolute top-6 flex items-center px-3 py-2 bg-green-400 border-2 border-green-700 rounded-full z-10 ${fadeOut ? 'animate-fade-out' : 'animate-slide-in'}`}>
