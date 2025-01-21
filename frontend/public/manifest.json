@@ -1,0 +1,21 @@
+{
+    "name": "EaseCHAOS",
+    "short_name": "EaseCHAOS",
+    "description": "UMaT Timetable Viewer",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FFFFFF",
+    "theme_color": "#000000",
+    "icons": [
+      {
+        "src": "assets/easechaos.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "assets/easechaos.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }

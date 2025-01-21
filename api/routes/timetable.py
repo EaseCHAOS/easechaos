@@ -1,6 +1,5 @@
 import os
 import logging
-from collections import defaultdict
 
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
