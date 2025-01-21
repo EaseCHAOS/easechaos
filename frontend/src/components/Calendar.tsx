@@ -157,14 +157,13 @@ export default function Calendar() {
 
 
   return (
-    <div className="bg-gray-50 dark:bg-[#02040A] p-4">
+    <div className="bg-gray-50 dark:bg-[#02040A] h-screen">
       <div className={clsx(
-        "mx-auto",
-        viewMode === 'week' ? "max-w-12xl" : "max-w-4xl"
+        "h-full w-full relative",
+        viewMode === 'week' ? "max-w-12xl" : "w-full md:max-w-4xl md:mx-auto"
       )}>
-        <div className="bg-white dark:bg-[#262626] rounded-lg shadow-lg flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-30 rounded-t-md">
+        <div className="bg-white dark:bg-[#262626] rounded-none md:rounded-lg shadow-lg flex flex-col h-full">
+          <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-50 rounded-t-md relative">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
@@ -310,17 +309,14 @@ export default function Calendar() {
             </div>
           </div>
 
-          {/* Calendar Grid - Modified to take remaining height */}
-          <div className="overflow-auto z-0 min-h-fit">
-            <div className="px-4">
-              <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
-                {viewMode === 'week' ? (
-                  <WeekView schedule={schedule} />
-                ) : (
-                  <DayView schedule={currentDaySchedule} />
-                )}
-              </Suspense>
-            </div>
+          <div className="flex-1 overflow-auto px-2 md:px-4 z-0">
+            <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
+              {viewMode === 'week' ? (
+                <WeekView schedule={schedule} />
+              ) : (
+                <DayView schedule={currentDaySchedule} />
+              )}
+            </Suspense>
           </div>
         </div>
       </div>

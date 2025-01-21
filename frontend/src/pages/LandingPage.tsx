@@ -209,9 +209,9 @@ export default function LandingPage() {
                         Built by <a className="underline underline-offset-4" href="https://github.com/0xdvc">
                             Ohene Neil
                         </a>, <a className="underline underline-offset-4" href="https://github.com/aaron-ontoyin">
-                            Aaron Ontoyin
+                            Ontoyin Aaron Yin
                         </a> and <a className="underline underline-offset-4" href="https://github.com/db-keli">
-                            Kekeli Dompeh
+                            Dompeh Kofi Bright
                         </a>.
 
                         Get the source code from <a className="underline underline-offset-4" href="https://github.com/Easechaos/easechaos">
