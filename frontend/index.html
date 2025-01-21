@@ -1,15 +1,46 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="./assets/easechaos.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="format-detection" content="telephone=no">
-    <meta name="description" content="EaseCHAOS - Simplified academic schedules with intuitive viewing, and mobile-friendly." />
-    <title>EaseCHAOS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="./public/assets/easechaos.png" />
+
+  <!-- Web Application Manifest -->
+  <link rel="manifest" href="./public/manifest.json">
+
+  <!-- iOS Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EaseCHAOS">
+
+  <!-- iOS Icons -->
+  <link rel="apple-touch-icon" href="./public/assets/easechaos.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="./public/assets/easechaos.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./public/assets/easechaos.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="./public/assets/easechaos.png">
+
+  <!-- iOS Splash Screens -->
+  <link rel="apple-touch-startup-image" href="./public/assets/easechaos.png"
+    media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="./public/assets/easechaos.png"
+    media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="./public/assets/easechaos.png"
+    media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="./public/assets/easechaos.png"
+    media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="./public/assets/easechaos.png"
+    media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description"
+    content="EaseCHAOS - Simplified academic schedules with intuitive viewing, and mobile-friendly." />
+  <title>EaseCHAOS</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>
