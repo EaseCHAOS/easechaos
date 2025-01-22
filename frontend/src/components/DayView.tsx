@@ -243,7 +243,7 @@ export default function DayView({ schedule }: DayViewProps) {
                 }}
               >
                 <div className={clsx(
-                  "text-sm break-words overflow-hidden",
+                  "text-xs sm:text-sm break-words overflow-hidden",
                   colors.text
                 )}>
                   {event.value}

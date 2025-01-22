@@ -18,5 +18,10 @@ app.add_middleware(
 def root():
     return {"Hello": "World"}
 
+@app.get("/api/v1/healthcheck")
+def health_check():
+    """A function to check the health of the server."""
+    return {"status": "healthy"}
+
 app.include_router(router=app_router)
 app.include_router(timetable_router, prefix="/api/v1")

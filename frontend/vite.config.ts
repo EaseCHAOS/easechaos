@@ -23,6 +23,45 @@ const pwa = {
         type: 'image/png'
       }
     ]
+  },
+  workbox: {
+    runtimeCaching: [
+      // Cache API responses from Render
+      {
+        urlPattern: /^https:\/\/easechaos\.onrender\.com\/.*$/,
+        handler: 'StaleWhileRevalidate',
+        options: {
+          cacheName: 'api-cache',
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+          },
+          cacheableResponse: {
+            statuses: [0, 200]
+          },
+          // Add headers for CORS
+          fetchOptions: {
+            mode: 'cors',
+            credentials: 'same-origin'
+          }
+        }
+      },
+      // Cache static assets
+      {
+        urlPattern: /\.(js|css|png|jpg|jpeg|svg|ico)$/,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'static-assets',
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+          }
+        }
+      }
+    ],
+    // Ensure offline functionality
+    navigateFallback: '/index.html',
+    navigateFallbackAllowlist: [/^(?!\/__)/], // Exclude service worker paths
   }
 }
 

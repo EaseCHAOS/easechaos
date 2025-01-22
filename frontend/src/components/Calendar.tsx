@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutGrid, Calend
 import clsx from 'clsx';
 import { WeekSchedule } from '../types';
 import 'react-day-picker/dist/style.css';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { downloadElementAsImage, downloadElementAsPDF } from '../utils/downloadUtils';
 import ThemeToggle from './ThemeToggle';
 
@@ -26,6 +26,8 @@ export default function Calendar() {
   const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
   const downloadDropdownRef = useRef<HTMLDivElement>(null);
   const { dept, year } = useParams();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const navigate = useNavigate();
 
 
   const fetchSchedule = async (dept: string, year: string) => {
@@ -36,14 +38,32 @@ export default function Calendar() {
     const cachedVersion = localStorage.getItem(versionKey);
 
     if (cachedData) {
-      validateAndUpdateCache(dept, year, cachedData, cachedVersion);
+      // Try to validate cache in background, but don't block rendering
+      validateAndUpdateCache(dept, year, cachedData, cachedVersion).catch(console.error);
       return JSON.parse(cachedData);
     }
 
-    return fetchFresh(dept, year);
+    try {
+      return await fetchFresh(dept, year);
+    } catch (error) {
+      // If offline and no cache exists, throw error
+      if (!navigator.onLine) {
+        throw new Error('You are offline and no cached schedule is available');
+      }
+      throw error;
+    }
   };
 
   const validateAndUpdateCache = async (dept: string, year: string, cachedData: string, cachedVersion: string | null) => {
+    // Add a debounce check
+    const lastCheck = localStorage.getItem(`${dept}:${year}:lastCheck`);
+    const now = Date.now();
+    
+    // Only check for updates every 30 minutes
+    if (lastCheck && now - parseInt(lastCheck) < 30 * 60 * 1000) {
+      return;
+    }
+
     try {
       const response = await fetch(import.meta.env.VITE_API_URL + '/get_time_table', {
         method: 'POST',
@@ -56,6 +76,7 @@ export default function Calendar() {
 
       if (!response.ok) return;
 
+      localStorage.setItem(`${dept}:${year}:lastCheck`, now.toString());
       const { data, version } = await response.json();
 
       if (version !== cachedVersion || JSON.stringify(data) !== cachedData) {
@@ -148,6 +169,19 @@ export default function Calendar() {
     };
   }, [viewMode, selectedDate]);
 
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   if (error) {
     return <div className="flex items-center justify-center h-screen text-red-500">{error}</div>;
   }
@@ -155,24 +189,72 @@ export default function Calendar() {
   const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const currentDaySchedule = schedule.find(day => day.day === dayNames[selectedDate.getDay() - 1]);
 
+  // format both week and day view data
+  const formatCellContent = (value: string) => {
+    if (!value) return value;
+
+    // Split the string at brackets to preserve venue information
+    const [mainText, ...bracketsContent] = value.split(/(\(.*?\))/g);
+
+    // Format only the main text (before brackets)
+    const formattedMain = mainText
+      // Remove program codes at start (e.g., "CE 1B 141", "CE 1A, CE 1B 141")
+      .replace(/^(?:[A-Z]{2,3}\s+)+/g, '')
+      // Remove program codes before numbers (e.g., "1B CE 141", "1A, 1B CE 141")
+      .replace(/\s+[A-Z]{2,3}\s+(?=\d)/g, ' ')
+      // Remove multiple program codes (e.g., "SP, LA, GL 151", "CE, EE 141")
+      .replace(/(?:[A-Z]{2,3},?\s*)+(?=\d)/g, '')
+      // Remove program codes between group and number (e.g., "1A CE 141")
+      .replace(/(\d[A-Z])\s+[A-Z]{2,3}\s+(\d)/g, '$1 $2')
+      // Clean up extra spaces and commas
+      .replace(/\s*,\s*/g, ', ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Rejoin with preserved brackets content
+    return formattedMain + bracketsContent.join('');
+  };
+
+  // Format week view data
+  const scheduleData = schedule.map(day => ({
+    ...day,
+    data: day.data.map(slot => ({
+      ...slot,
+      value: slot.value ? formatCellContent(slot.value) : null
+    }))
+  }));
+
+  // Format day view data
+  const formattedDaySchedule = currentDaySchedule ? {
+    ...currentDaySchedule,
+    data: currentDaySchedule.data.map(slot => ({
+      ...slot,
+      value: slot.value ? formatCellContent(slot.value) : null
+    }))
+  } : undefined;
 
   return (
     <div className="bg-gray-50 dark:bg-[#02040A] h-screen">
       <div className={clsx(
         "h-full w-full relative",
-        viewMode === 'week' ? "max-w-12xl" : "w-full md:max-w-4xl md:mx-auto"
+        viewMode === 'week' ? "max-w-full" : "w-full md:max-w-4xl md:mx-auto"
       )}>
         <div className="bg-white dark:bg-[#262626] rounded-none md:rounded-lg shadow-lg flex flex-col h-full">
+          {!isOnline && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/30 px-4 py-2 text-sm text-yellow-800 dark:text-yellow-200 text-center">
+              You're offline. Some features may be limited.
+            </div>
+          )}
           <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-50 rounded-t-md relative">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
-                  <a
-                    href="/"
+                  <button
+                    onClick={() => navigate('/')}
                     className="border border-[#1B1B1B] dark:border-[#303030] p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-[#303030]"
                   >
                     <ArrowLeft className="w-4 h-4 dark:text-[#B2B2B2]" />
-                  </a>
+                  </button>
                   <h1 className="text-2xl font-bold dark:text-[#F0F6FC]">
                     {viewMode === 'week'
                       ? "Week's Schedule"
@@ -312,9 +394,9 @@ export default function Calendar() {
           <div className="flex-1 overflow-auto px-2 md:px-4 z-0">
             <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
               {viewMode === 'week' ? (
-                <WeekView schedule={schedule} />
+                <WeekView schedule={scheduleData} />
               ) : (
-                <DayView schedule={currentDaySchedule} />
+                <DayView schedule={formattedDaySchedule} />
               )}
             </Suspense>
           </div>

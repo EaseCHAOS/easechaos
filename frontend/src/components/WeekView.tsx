@@ -9,7 +9,7 @@ interface WeekViewProps {
 }
 
 const timeSlots = Array.from({ length: 27 }, (_, i) => ({
-  hour: Math.floor(i / 2) + 7,
+  hour: String(Math.floor(i / 2) + 7).padStart(2, '0'),
   minute: i % 2 === 0 ? '00' : '30'
 }));
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -53,18 +53,18 @@ export default function WeekView({ schedule }: WeekViewProps) {
   const currentTimePosition = React.useMemo(() => {
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
-    const timeInHours = hours + minutes / 60;
     
     // Hide indicator if outside 7am-8pm
-    if (timeInHours < 7 || timeInHours > 20) {
+    if (hours < 7 || hours > 20) {
       return null;
     }
 
-    const startTimeInHours = 7;  // 7 AM
-    const endTimeInHours = 20;   // 8 PM
-    const totalHours = endTimeInHours - startTimeInHours;
+    const columnWidth = (100 / 24); 
+    const hoursSince7am = hours - 7;
+    const totalMinutesSince7am = (hoursSince7am * 60) + minutes;
+    const columnPosition = totalMinutesSince7am / 30; // How many 30-min columns have passed
 
-    return ((timeInHours - startTimeInHours) / totalHours) * 100;
+    return columnPosition * columnWidth;
   }, [currentTime]);
 
   console.log(currentTimePosition);
@@ -165,18 +165,17 @@ export default function WeekView({ schedule }: WeekViewProps) {
 
   return (
     <div className="relative h-full overflow-x-auto">
-      <div id="week-schedule" className="h-full bg-white dark:bg-[#262626] min-w-[1000px]">
+      <div id="week-schedule" className="h-full bg-white dark:bg-[#262626] min-w-[2000px]">
         <div className="h-full">
           <div className="grid grid-cols-[45px_1fr] sticky top-0 bg-white dark:bg-[#262626] z-10 py-2">
             <div className="h-4"/>
-            <div className="flex-1 grid grid-cols-25 relative pl-[3.7%]">
+            <div className="flex-1 grid grid-cols-[repeat(27,1fr)] relative">
               {timeSlots.map((slot, index) => (
                 <div
                   key={index}
-                  className="text-center font-medium text-gray-700 dark:text-[#B2B2B2] text-xs whitespace-nowrap absolute ml-[20px]"
+                  className="text-left font-medium text-gray-700 dark:text-[#B2B2B2] text-xs whitespace-nowrap"
                   style={{ 
-                    left: `${(index / 27) * 100}%`,
-                    transform: 'translateX(-50%)'
+                    gridColumn: index + 1
                   }}
                 >
                   {`${slot.hour}:${slot.minute}`}
@@ -188,10 +187,10 @@ export default function WeekView({ schedule }: WeekViewProps) {
           <div className="space-y-[0.1rem] pb-12 relative bg-white dark:bg-[#262626] z-[100] h-[calc(100%-2rem)]">
             {currentTimePosition !== null && (
               <div
-                className="absolute h-full w-[2px] bg-gray-500 dark:bg-[#4593F8] z-[50] -ml-[20px] time-indicator"
+                className="absolute h-full w-[2px] bg-gray-500 dark:bg-[#4593F8] z-[50] time-indicator"
                 style={{
-                  left: `${currentTimePosition}%`,
-                  transform: 'translateX(-50%)'
+                  left: `${currentTimePosition + 0.6}%`,
+                  transform: 'translateX(-1px)'
                 }}
               >
                 <div
@@ -244,7 +243,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
                           }}
                         >
                           <div className={clsx(
-                            "text-sm sm:text-xs line-clamp-2 overflow-hidden text-ellipsis text-center",
+                            "text-xs line-clamp-2 overflow-hidden text-ellipsis text-center",
                             colors.text
                           )}>
                             {slot.value}
