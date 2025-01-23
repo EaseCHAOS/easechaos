@@ -11,12 +11,16 @@ export const departments = [
   { id: 'GL', name: 'Geological Engineering' },
   { id: 'ME', name: 'Minerals Engineering' },
   { id: 'RN', name: 'Renewable Engineering' },
-  { id: 'GM', name: 'Geomatic Engineering' },
+  { id: 'GL', name: 'Geological Engineering' },
   { id: 'IS', name: 'Information Systems' },
   { id: 'CH', name: 'Chemical Engineering' },
   { id: 'MA', name: 'Mathematics' },
   { id: 'ES', name: 'Environmental & Safety Engineering' },
   { id: 'LT', name: 'Logistics & Transportation' },
+  { id: 'LA', name: 'Land Administration and Information Systems' },
+  { id: 'SP', name: 'Spatial Planning' },
+  { id: 'EC', name: 'Economics and Industrial Organization'}
+
 ] as const;
 
 export const years = [
