@@ -8,6 +8,7 @@ export const departments = [
   { id: "CY", name: "Cybersecurity" },
   { id: "PE", name: "Petroleum Engineering" },
   { id: "RP", name: "Petroleum Refining and Petrochemical Engineering" },
+  { id: "PG", name: "Petroleum Geosciences" },
   { id: "GL", name: "Geological Engineering" },
   { id: "MR", name: "Minerals Engineering" },
   { id: "RN", name: "Renewable Engineering" },
@@ -18,7 +19,7 @@ export const departments = [
   { id: "MA", name: "Mathematics" },
   { id: "ES", name: "Environmental & Safety Engineering" },
   { id: "LT", name: "Logistics & Transportation" },
-  { id: "LA", name: "Land Administration and Information Systems" },
+  { id: "LA", name: "Land Administration" },
   { id: "SP", name: "Spatial Planning" },
   { id: "EC", name: "Economics and Industrial Organization" },
 ] as const;
