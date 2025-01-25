@@ -1,7 +1,7 @@
-import { Sun, Moon, Monitor } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
-import { useState, useRef, useEffect } from 'react';
-import clsx from 'clsx';
+import { Sun, Moon, Monitor } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
+import { useState, useRef, useEffect } from "react";
+import clsx from "clsx";
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -10,19 +10,22 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowDropdown(false);
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const themeOptions = [
-    { value: 'light', icon: Sun, label: 'Light' },
-    { value: 'dark', icon: Moon, label: 'Dark' },
-    { value: 'system', icon: Monitor, label: 'System' },
+    { value: "light", icon: Sun, label: "Light" },
+    { value: "dark", icon: Moon, label: "Dark" },
+    { value: "system", icon: Monitor, label: "System" },
   ] as const;
 
   return (
@@ -37,9 +40,9 @@ export default function ThemeToggle() {
           "relative flex items-center"
         )}
       >
-        {theme === 'dark' ? (
+        {theme === "dark" ? (
           <Moon className="w-5 h-5 dark:text-[#B2B2B2]" />
-        ) : theme === 'light' ? (
+        ) : theme === "light" ? (
           <Sun className="w-5 h-5" />
         ) : (
           <Monitor className="w-5 h-5 dark:text-[#B2B2B2]" />
@@ -47,7 +50,7 @@ export default function ThemeToggle() {
       </button>
 
       {showDropdown && (
-        <div 
+        <div
           ref={dropdownRef}
           className="absolute top-full -right-30 mt-1 z-[9999]"
         >
@@ -74,4 +77,4 @@ export default function ThemeToggle() {
       )}
     </div>
   );
-} 
+}
