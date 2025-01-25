@@ -3,6 +3,8 @@ import pandas as pd
 from icalendar import Event, Calendar
 from datetime import datetime, timedelta
 import openpyxl
+import os
+from typing import List
 
 
 def _get_time_row(df: pd.DataFrame) -> pd.Series:
@@ -25,42 +27,45 @@ def _get_time_row(df: pd.DataFrame) -> pd.Series:
 
 
 def _get_daily_table(df: pd.DataFrame, class_pattern: str) -> pd.DataFrame:
-    """
-        Get the a simplified dataframe of the classes for a given class.
-
-        Parameters
-        ----------    table = catched_get_table(raw_file, class_to_extract_for)
-
-        df : pandas.DataFrame
-            The dataframe to get the simplified time table from.
-            It's a general time table on a single day for all classes.
-        class_pattern : str
-            The class to search for. E.g. 'EL 3'
-    o
-        Returns
-        -------
-        pandas.DataFrame
-            The simplified dataframe for only the given class.
-    """
+    """Get the simplified dataframe for a given class."""
     df = df.copy()
-
+    
     time_row = _get_time_row(df)
     new_cols = time_row[1].to_list()
     new_cols.pop(0)
     new_cols.insert(0, "Classroom")
     df.columns = new_cols
-
+    
     df.set_index("Classroom", inplace=True)
-
     df = df.iloc[time_row[0] + 1 :]
-
-    # here you are, you dipshit.  
-    # basically replace the space with a regex that matches zero or more spaces
-    buggy_pattern = class_pattern.replace(" ", r"\s*")
-    df = df.mask(~df.map(lambda x: bool(re.search(buggy_pattern, str(x)))))
-
+    
+    dept, year = class_pattern.split()
+    
+    patterns = [
+        # basic pattern (e.g "CE 4", "CE 4A")
+        fr"{dept}\s*{year}[A-Z]?",
+        
+        # multiple sections (e.g "CE 4A, 4B")
+        fr"{dept}\s*{year}[A-Z](\s*,\s*{year}[A-Z])*",
+        
+        # department with sections combined (e.g "CE 4A, CE 4B")
+        fr"{dept}\s*{year}[A-Z](\s*,\s*{dept}\s*{year}[A-Z])*",
+        
+        # course numbers starting with the year number (e.g., CE 459, CE/RN 459)
+        fr"{dept}\s*{year}[0-9]{{2}}",
+        
+        # multiple departments sharing course number starting with year
+        fr"(?:[A-Z]{{2,3}}(?:\s*[,/]\s*)?)*{dept}(?:\s*[,/]\s*[A-Z]{{2,3}})*\s+{year}[0-9]{{2}}",
+        
+        # department mentioned first in shared course
+        fr"{dept}(?:\s*[,/]\s*[A-Z]{{2,3}})+\s+{year}[0-9]{{2}}"
+    ]
+    
+    combined_pattern = '|'.join(f'({pattern})' for pattern in patterns)
+    
+    df = df.mask(~df.map(lambda x: bool(re.search(combined_pattern, str(x), re.IGNORECASE))))
     df = df.dropna(how="all")
-
+    
     return df
 
 
@@ -231,3 +236,81 @@ def generate_calendar(timetable, start_date, end_date):
     with open("class_schedule.ics", "wb") as f:
         f.write(cal.to_ical())
     return cal.to_ical()
+
+
+def get_all_classes(filename: str) -> List[str]:
+    """Extract all class patterns from the workbook."""
+    try:
+        # Get the path to the Excel file
+        UPLOAD_DIR = 'api/drafts'
+            
+        file_path = os.path.join(UPLOAD_DIR, f"{filename}.xlsx")
+        
+        # Read the Excel file
+        wb = openpyxl.load_workbook(file_path, data_only=True)
+        
+        # Set to store unique class patterns
+        class_patterns = set()
+        
+        # Department codes from your constants
+        dept_codes = [
+            'CE', 'MN', 'MC', 'EL', 'GM', 'SD', 'CY', 'PE', 
+            'RP', 'GL', 'ME', 'RN', 'IS', 'CH', 'MA', 'ES', 
+            'LT', 'LA', 'SP', 'EC'
+        ]
+        
+        # Go through each sheet (day)
+        for sheet in wb.worksheets:
+            # Scan all cells for class patterns
+            for row in sheet.iter_rows():
+                for cell in row:
+                    if cell.value:
+                        cell_value = str(cell.value).strip()
+                        
+                        # Split by commas and process each part
+                        parts = cell_value.split(',')
+                        for part in parts:
+                            part = part.strip()
+                            
+                            # Handle forward slash pattern (CE/EE 1)
+                            slash_pattern = re.search(r'([A-Z]{2,3}(?:/[A-Z]{2,3})+)\s+(\d[A-Z]?)', part)
+                            if slash_pattern:
+                                depts = slash_pattern.group(1).split('/')
+                                year = slash_pattern.group(2)
+                                for dept in depts:
+                                    if dept in dept_codes:
+                                        class_patterns.add(f"{dept} {year}")
+                                continue
+                            
+                            # Match department codes
+                            for dept in dept_codes:
+                                # Pattern 1: DEPT YEAR[SECTION] (CE 1A, CE 1)
+                                matches = re.finditer(
+                                    rf'{dept}\s+(\d[A-Z]?)',
+                                    part
+                                )
+                                for match in matches:
+                                    class_patterns.add(f"{dept} {match.group(1)}")
+                                
+                                # Pattern 2: YEAR[SECTION] DEPT (1A CE, 1 CE)
+                                matches = re.finditer(
+                                    rf'(\d[A-Z]?)\s+{dept}',
+                                    part
+                                )
+                                for match in matches:
+                                    class_patterns.add(f"{dept} {match.group(1)}")
+                                
+                                # Pattern 3: Multiple departments (CE, EE 1)
+                                if ',' in part and any(d in part for d in dept_codes):
+                                    year_match = re.search(r'\s(\d[A-Z]?)(?:\s|$)', part)
+                                    if year_match:
+                                        year = year_match.group(1)
+                                        dept_matches = re.finditer(r'([A-Z]{2,3})(?:,|\s|$)', part)
+                                        for dept_match in dept_matches:
+                                            class_patterns.add(f"{dept_match.group(1)} {year}")
+        
+        # Sort the patterns for consistent output
+        return sorted(list(class_patterns))
+        
+    except Exception as e:
+        raise Exception(f"Error reading workbook: {str(e)}")
