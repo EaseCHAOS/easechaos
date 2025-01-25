@@ -293,7 +293,7 @@ export default function LandingPage() {
             , built by{" "}
             <a
               className="underline underline-offset-4"
-              href="https://github.com/0xdvc"
+              href="https://github.com/ABZABI"
             >
               Ohene Neil
             </a>
