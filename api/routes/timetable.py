@@ -22,7 +22,6 @@ project_root_path = current_script_path.parents[1]
 DRAFTS_FOLDER = project_root_path / "drafts"
 
 # Update the project paths
-CLASH_FILE = project_root_path / "clashes.xlsx"
 
 router = APIRouter()
 
@@ -148,13 +147,8 @@ async def get_time_table_endpoint(request: TimeTableRequest):
             
         table_data.append({"day": days[index], "data": day_data})
 
-    # After generating table_data, detect and record clashes
-    clashes = detect_clashes(table_data, request.class_pattern)
-    if clashes:
-        update_clash_excel(clashes)
 
     return {
         "data": table_data,
         "version": content_hash,
-        "clashes_detected": len(clashes)
     }
