@@ -10,7 +10,7 @@ const QUALITY = {
   desktop: {
     pixelRatio: 2,
     quality: 0.95,
-    pdfScale: 1.5,
+    pdfScale: 1.2,
   },
 };
 
@@ -89,11 +89,15 @@ export async function downloadElementAsPDF(
         scale: settings.pdfScale,
         useCORS: true,
         backgroundColor,
+        width: img.width,
+        height: img.height
       },
       jsPDF: {
         unit: "px",
+        format: [img.width * settings.pdfScale, img.height * settings.pdfScale],
         orientation: "landscape",
         compress: true,
+        hotfixes: ["px_scaling"],
       },
     };
 
