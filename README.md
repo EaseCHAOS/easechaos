@@ -13,7 +13,7 @@ easeCHAOS is a modern, user-friendly timetable viewer designed specifically for 
 - **Class-Specific**: View only your class's schedule, filtered and clean
 - **Modern Interface**: Intuitive weekly and daily views
 - **Mobile Friendly**: Access your schedule on any device
-- **Download Options**: Download your schedule in pdf, image, calendar file(ics), and excel format.
+- **Download Options**: Download your schedule in pdf and image.
 
 ## Current Progress
 
@@ -23,6 +23,7 @@ The application currently features:
 - ✅ Class filtering system
 - ✅ Responsive design with Light and Dark Theme
 - ✅ Calendar download (PDF & Image)
+- ✅ Accessible as Progressive Web App (PWA). You can basically save for offline use once your schedule is loaded up
 
 ## Getting Started
 
@@ -30,7 +31,7 @@ The application currently features:
 - Node.js 18+
 - Python 3.9+
 - Redis
-- Docker (Optional)
+- Docker (Optional, although preferred for local developement)
 
 ## Tech Stack
 
@@ -47,9 +48,8 @@ The application currently features:
 
 
 ### Installation (Local without Docker)
-
 1. Clone the repository
-2. Ensure you have `make` installed
+2. Ensure you have `make` installed (available on most linux flavored systems)
 3. Copy and rename `.env.sample` to `.env`
 4. Run `make local` to start the application on local. However, before that, note that you would need a `redis` instance. You could create one on [upstash.com](https://upstash.com/) and just place the details in the `.env` file.
 
@@ -60,7 +60,7 @@ The application currently features:
 2. Copy and rename `.env.sample` to `.env`
 3. Run `make up` to start the application on docker.
 
-NB: This project is still under development.
+NB: This project is still under development. You might encounter bugs with the processed data. However, issues stem from the drafts, and has nothing to do with the extractor in most cases. Refer to the IT department and respective class reps to resolve clashes and unfamiliar conventions.
 
 ### Current Progress
 
@@ -76,7 +76,11 @@ NB: This project is still under development.
 
 
 ## Contributors
-
 - [@Aaron Ontonyin](https://github.com/Aaron-Ontoyin)
 - [@Kekeli Dompeh](https://github.com/db-keli)
 - [@Neil Ohene](https://github.com/0xDVC)
+
+## Acknowledgements
+- Mr. Edem Y. Broni
+- Mr. Abdul-Aziz
+- [@Kelvin Amoaba](https://github.com/kelvinamoaba)
