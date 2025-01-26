@@ -86,7 +86,7 @@ export default function Calendar() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            filename: "Draft_1",
+            filename: "Draft_2",
             class_pattern: `${dept} ${year}`,
           }),
         }
@@ -114,7 +114,7 @@ export default function Calendar() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          filename: "Draft_1",
+          filename: "Draft_2",
           class_pattern: `${dept} ${year}`,
         }),
       }
