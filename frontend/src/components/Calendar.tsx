@@ -258,7 +258,10 @@ export default function Calendar() {
           }
         );
 
-        if (!response.ok) return;
+        if (!response.ok) {
+          setIsRefreshing(false); 
+          return;
+        }
 
         const { data, version } = await response.json();
         const currentVersion = localStorage.getItem(`schedule:${dept}:${year}:version`);
@@ -276,25 +279,21 @@ export default function Calendar() {
       }
     };
 
-    // Initial load
     refreshData();
 
-    // Set up auto-refresh interval (every 5 minutes when tab is active)
     const intervalId = setInterval(() => {
       if (!document.hidden) {  // Only refresh if tab is visible
         refreshData();
       }
     }, 5 * 60 * 1000);  // 5 minutes
 
-    // Set up visibility change listener
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        refreshData();  // Refresh when tab becomes visible
+        refreshData();  
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Cleanup
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -340,7 +339,7 @@ export default function Calendar() {
     return formattedMain + bracketsContent.join("");
   };
 
-  // Format week view data
+  // format week view data
   const scheduleData = schedule.map((day) => ({
     ...day,
     data: day.data.map((slot) => ({
@@ -349,7 +348,7 @@ export default function Calendar() {
     })),
   }));
 
-  // Format day view data
+  // format day view data
   const formattedDaySchedule = currentDaySchedule
     ? {
         ...currentDaySchedule,
