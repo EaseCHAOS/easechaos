@@ -4,7 +4,7 @@ import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa';
 
 
 const pwa = {
-  registerType: 'autoUpdate',
+  registerType: 'prompt',
   includeAssets: ['assets/easechaos.png'],
   manifest: {
     name: 'EaseCHAOS',
@@ -25,6 +25,7 @@ const pwa = {
     ]
   },
   workbox: {
+    cacheId: 'easechaos-v1',
     runtimeCaching: [
       {
         urlPattern: /^https:\/\/easechaos\.onrender\.com\/.*$/,
@@ -34,7 +35,7 @@ const pwa = {
           networkTimeoutSeconds: 3,
           expiration: {
             maxEntries: 50,
-            maxAgeSeconds: 60 * 60 * 24 * 7 
+            maxAgeSeconds: 60 * 5
           },
           cacheableResponse: {
             statuses: [0, 200]
@@ -47,18 +48,19 @@ const pwa = {
       },
       {
         urlPattern: /\.(js|css|png|jpg|jpeg|svg|ico)$/,
-        handler: 'CacheFirst',
+        handler: 'NetworkFirst',
         options: {
           cacheName: 'static-assets',
           expiration: {
             maxEntries: 100,
-            maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+            maxAgeSeconds: 60 * 60
           }
         }
       }
     ],
     skipWaiting: true,
     clientsClaim: true,
+    cleanupOutdatedCaches: true,
     navigateFallback: '/index.html',
     navigateFallbackAllowlist: [/^(?!\/__)/], 
   }

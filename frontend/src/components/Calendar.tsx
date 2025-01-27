@@ -37,6 +37,7 @@ export default function Calendar() {
   const { dept, year } = useParams();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const navigate = useNavigate();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchSchedule = async (dept: string, year: string) => {
     const cacheKey = `schedule:${dept}:${year}`;
@@ -234,6 +235,72 @@ export default function Calendar() {
     return () => clearInterval(intervalId);
   }, [dept, year]);
 
+  // Add auto-refresh effect
+  useEffect(() => {
+    if (!dept || !year) return;
+
+    const refreshData = async () => {
+      setIsRefreshing(true);
+      try {
+        const timestamp = new Date().getTime();
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/get_time_table?t=${timestamp}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+            },
+            body: JSON.stringify({
+              filename: "Draft_2",
+              class_pattern: `${dept} ${year}`,
+            }),
+          }
+        );
+
+        if (!response.ok) return;
+
+        const { data, version } = await response.json();
+        const currentVersion = localStorage.getItem(`schedule:${dept}:${year}:version`);
+
+        if (version !== currentVersion) {
+          console.log('New version detected, updating...');
+          localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
+          localStorage.setItem(`schedule:${dept}:${year}:version`, version);
+          setSchedule(data);
+        }
+      } catch (error) {
+        console.error("Auto-refresh failed:", error);
+      } finally {
+        setIsRefreshing(false);
+      }
+    };
+
+    // Initial load
+    refreshData();
+
+    // Set up auto-refresh interval (every 5 minutes when tab is active)
+    const intervalId = setInterval(() => {
+      if (!document.hidden) {  // Only refresh if tab is visible
+        refreshData();
+      }
+    }, 5 * 60 * 1000);  // 5 minutes
+
+    // Set up visibility change listener
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshData();  // Refresh when tab becomes visible
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [dept, year]);
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen text-red-500">
@@ -305,6 +372,11 @@ export default function Calendar() {
           {!isOnline && (
             <div className="bg-yellow-50 dark:bg-yellow-900/30 px-4 py-2 text-sm text-yellow-800 dark:text-yellow-200 text-center">
               You're offline. Some features may be limited.
+            </div>
+          )}
+          {isRefreshing && (
+            <div className="bg-blue-50 dark:bg-blue-900/30 px-4 py-2 text-sm text-blue-800 dark:text-blue-200 text-center">
+              Checking for updates...
             </div>
           )}
           <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-50 rounded-t-md relative">
