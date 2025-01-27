@@ -26,27 +26,25 @@ const pwa = {
   },
   workbox: {
     runtimeCaching: [
-      // Cache API responses from Render
       {
         urlPattern: /^https:\/\/easechaos\.onrender\.com\/.*$/,
-        handler: 'StaleWhileRevalidate',
+        handler: 'NetworkFirst',
         options: {
           cacheName: 'api-cache',
+          networkTimeoutSeconds: 3,
           expiration: {
             maxEntries: 50,
-            maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+            maxAgeSeconds: 60 * 60 * 24 * 7 
           },
           cacheableResponse: {
             statuses: [0, 200]
           },
-          // Add headers for CORS
           fetchOptions: {
             mode: 'cors',
             credentials: 'same-origin'
           }
         }
       },
-      // Cache static assets
       {
         urlPattern: /\.(js|css|png|jpg|jpeg|svg|ico)$/,
         handler: 'CacheFirst',
@@ -59,9 +57,10 @@ const pwa = {
         }
       }
     ],
-    // Ensure offline functionality
+    skipWaiting: true,
+    clientsClaim: true,
     navigateFallback: '/index.html',
-    navigateFallbackAllowlist: [/^(?!\/__)/], // Exclude service worker paths
+    navigateFallbackAllowlist: [/^(?!\/__)/], 
   }
 }
 
