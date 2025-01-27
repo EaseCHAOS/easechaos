@@ -70,21 +70,19 @@ export default function Calendar() {
     cachedData: string,
     cachedVersion: string | null
   ) => {
-    // Add a debounce check
-    const lastCheck = localStorage.getItem(`${dept}:${year}:lastCheck`);
-    const now = Date.now();
-
-    // Only check for updates every 30 minutes
-    if (lastCheck && now - parseInt(lastCheck) < 30 * 60 * 1000) {
-      return;
-    }
-
     try {
+      // Add cache-busting query parameter
+      const timestamp = new Date().getTime();
       const response = await fetch(
-        import.meta.env.VITE_API_URL + "/get_time_table",
+        `${import.meta.env.VITE_API_URL}/get_time_table?t=${timestamp}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
           body: JSON.stringify({
             filename: "Draft_2",
             class_pattern: `${dept} ${year}`,
@@ -94,14 +92,21 @@ export default function Calendar() {
 
       if (!response.ok) return;
 
-      localStorage.setItem(`${dept}:${year}:lastCheck`, now.toString());
       const { data, version } = await response.json();
-
-      if (version !== cachedVersion || JSON.stringify(data) !== cachedData) {
+      
+      // Always update if versions don't match
+      if (version !== cachedVersion) {
+        console.log('New version detected, updating cache...');
         localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
         localStorage.setItem(`schedule:${dept}:${year}:version`, version);
+        localStorage.removeItem(`${dept}:${year}:lastCheck`); // Clear last check time
         setSchedule(data);
+        return;
       }
+
+      // Update last check time
+      localStorage.setItem(`${dept}:${year}:lastCheck`, Date.now().toString());
+      
     } catch (error) {
       console.error("Background validation failed:", error);
     }
@@ -207,6 +212,27 @@ export default function Calendar() {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  useEffect(() => {
+    if (!dept || !year) return;
+
+    const checkForUpdates = () => {
+      const cachedData = localStorage.getItem(`schedule:${dept}:${year}`);
+      const cachedVersion = localStorage.getItem(`schedule:${dept}:${year}:version`);
+      
+      if (cachedData) {
+        validateAndUpdateCache(dept, year, cachedData, cachedVersion);
+      }
+    };
+
+    // Check for updates every 5 minutes
+    const intervalId = setInterval(checkForUpdates, 5 * 60 * 1000);
+    
+    // Initial check
+    checkForUpdates();
+
+    return () => clearInterval(intervalId);
+  }, [dept, year]);
 
   if (error) {
     return (
