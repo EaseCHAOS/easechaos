@@ -286,14 +286,14 @@ export default function LandingPage() {
             Designed by{" "}
             <a
               className="underline underline-offset-4"
-              href="https://github.com/0xdvc"
+              href="https://github.com/ABZABI"
             >
               Abdul-Manan Femanya
             </a>
             , built by{" "}
             <a
               className="underline underline-offset-4"
-              href="https://github.com/ABZABI"
+              href="https://github.com/0xdvc"
             >
               Ohene Neil
             </a>
