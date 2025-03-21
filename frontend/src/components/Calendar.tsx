@@ -21,7 +21,6 @@ import ThemeToggle from "./ThemeToggle";
 
 type ViewMode = "day" | "week";
 
-// Replace direct imports with lazy imports
 const WeekView = lazy(() => import("./WeekView"));
 const DayView = lazy(() => import("./DayView"));
 
@@ -47,9 +46,8 @@ export default function Calendar() {
     const cachedVersion = localStorage.getItem(versionKey);
 
     if (cachedData) {
-      // Try to validate cache in background, but don't block rendering
       validateAndUpdateCache(dept, year, cachedData, cachedVersion).catch(
-        console.error
+        console.error,
       );
       return JSON.parse(cachedData);
     }
@@ -57,7 +55,6 @@ export default function Calendar() {
     try {
       return await fetchFresh(dept, year);
     } catch (error) {
-      // If offline and no cache exists, throw error
       if (!navigator.onLine) {
         throw new Error("You are offline and no cached schedule is available");
       }
@@ -69,35 +66,33 @@ export default function Calendar() {
     dept: string,
     year: string,
     cachedData: string,
-    cachedVersion: string | null
+    cachedVersion: string | null,
   ) => {
     try {
-      // Add cache-busting query parameter
       const timestamp = new Date().getTime();
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/get_time_table?t=${timestamp}`,
         {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
           },
           body: JSON.stringify({
             filename: "Draft_3",
             class_pattern: `${dept} ${year}`,
           }),
-        }
+        },
       );
 
       if (!response.ok) return;
 
       const { data, version } = await response.json();
-      
-      // Always update if versions don't match
+
       if (version !== cachedVersion) {
-        console.log('New version detected, updating cache...');
+        console.log("New version detected, updating cache...");
         localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
         localStorage.setItem(`schedule:${dept}:${year}:version`, version);
         localStorage.removeItem(`${dept}:${year}:lastCheck`); // Clear last check time
@@ -105,9 +100,7 @@ export default function Calendar() {
         return;
       }
 
-      // Update last check time
       localStorage.setItem(`${dept}:${year}:lastCheck`, Date.now().toString());
-      
     } catch (error) {
       console.error("Background validation failed:", error);
     }
@@ -123,7 +116,7 @@ export default function Calendar() {
           filename: "Draft_3",
           class_pattern: `${dept} ${year}`,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -219,8 +212,10 @@ export default function Calendar() {
 
     const checkForUpdates = () => {
       const cachedData = localStorage.getItem(`schedule:${dept}:${year}`);
-      const cachedVersion = localStorage.getItem(`schedule:${dept}:${year}:version`);
-      
+      const cachedVersion = localStorage.getItem(
+        `schedule:${dept}:${year}:version`,
+      );
+
       if (cachedData) {
         validateAndUpdateCache(dept, year, cachedData, cachedVersion);
       }
@@ -228,7 +223,7 @@ export default function Calendar() {
 
     // Check for updates every 5 minutes
     const intervalId = setInterval(checkForUpdates, 5 * 60 * 1000);
-    
+
     // Initial check
     checkForUpdates();
 
@@ -249,26 +244,31 @@ export default function Calendar() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              "Cache-Control": "no-cache, no-store, must-revalidate",
             },
             body: JSON.stringify({
               filename: "Draft_3",
               class_pattern: `${dept} ${year}`,
             }),
-          }
+          },
         );
 
         if (!response.ok) {
-          setIsRefreshing(false); 
+          setIsRefreshing(false);
           return;
         }
 
         const { data, version } = await response.json();
-        const currentVersion = localStorage.getItem(`schedule:${dept}:${year}:version`);
+        const currentVersion = localStorage.getItem(
+          `schedule:${dept}:${year}:version`,
+        );
 
         if (version !== currentVersion) {
-          console.log('New version detected, updating...');
-          localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
+          console.log("New version detected, updating...");
+          localStorage.setItem(
+            `schedule:${dept}:${year}`,
+            JSON.stringify(data),
+          );
           localStorage.setItem(`schedule:${dept}:${year}:version`, version);
           setSchedule(data);
         }
@@ -281,22 +281,26 @@ export default function Calendar() {
 
     refreshData();
 
-    const intervalId = setInterval(() => {
-      if (!document.hidden) {  // Only refresh if tab is visible
-        refreshData();
-      }
-    }, 5 * 60 * 1000);  // 5 minutes
+    const intervalId = setInterval(
+      () => {
+        if (!document.hidden) {
+          // Only refresh if tab is visible
+          refreshData();
+        }
+      },
+      5 * 60 * 1000,
+    ); // 5 minutes
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        refreshData();  
+        refreshData();
       }
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [dept, year]);
 
@@ -310,7 +314,7 @@ export default function Calendar() {
 
   const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
   const currentDaySchedule = schedule.find(
-    (day) => day.day === dayNames[selectedDate.getDay() - 1]
+    (day) => day.day === dayNames[selectedDate.getDay() - 1],
   );
 
   // format both week and day view data
@@ -364,7 +368,7 @@ export default function Calendar() {
       <div
         className={clsx(
           "h-full w-full relative",
-          viewMode === "week" ? "max-w-full" : "w-full md:max-w-4xl md:mx-auto"
+          viewMode === "week" ? "max-w-full" : "w-full md:max-w-4xl md:mx-auto",
         )}
       >
         <div className="bg-white dark:bg-[#262626] rounded-none md:rounded-lg shadow-lg flex flex-col h-full">
@@ -392,9 +396,9 @@ export default function Calendar() {
                     {viewMode === "week"
                       ? "Week's Schedule"
                       : format(selectedDate, "yyyy-MM-dd") ===
-                        format(new Date(), "yyyy-MM-dd")
-                      ? "Today"
-                      : format(selectedDate, "EEEE")}
+                          format(new Date(), "yyyy-MM-dd")
+                        ? "Today"
+                        : format(selectedDate, "EEEE")}
                   </h1>
                 </div>
                 {viewMode === "day" && (
@@ -476,7 +480,7 @@ export default function Calendar() {
                           onClick={() => {
                             downloadElementAsPDF(
                               "week-schedule",
-                              "Schedule.pdf"
+                              "Schedule.pdf",
                             );
                             setShowDownloadDropdown(false);
                           }}
@@ -490,7 +494,7 @@ export default function Calendar() {
                           onClick={() => {
                             downloadElementAsImage(
                               "week-schedule",
-                              "Schedule.png"
+                              "Schedule.png",
                             );
                             setShowDownloadDropdown(false);
                           }}
@@ -512,7 +516,7 @@ export default function Calendar() {
                       "p-2 rounded-md",
                       viewMode === "week"
                         ? "bg-white dark:bg-[#262626] shadow-sm"
-                        : "hover:bg-gray-200 dark:hover:bg-[#3e3e3e]"
+                        : "hover:bg-gray-200 dark:hover:bg-[#3e3e3e]",
                     )}
                   >
                     <LayoutGrid className="w-5 h-5 dark:text-[#B2B2B2]" />
@@ -523,7 +527,7 @@ export default function Calendar() {
                       "p-2 rounded-md",
                       viewMode === "day"
                         ? "bg-white dark:bg-[#262626] shadow-sm"
-                        : "hover:bg-gray-200 dark:hover:bg-[#3e3e3e]"
+                        : "hover:bg-gray-200 dark:hover:bg-[#3e3e3e]",
                     )}
                   >
                     <CalendarDayIcon className="w-5 h-5 dark:text-[#B2B2B2]" />
