@@ -6,7 +6,7 @@ import {
   COLOR_SCHEMES,
   DEFAULT_COLOR,
 } from "../constants/courseCodes";
-import { useTheme } from "../context/ThemeContext"; // Import the theme hook
+import { useTheme } from "../context/ThemeContext";
 
 interface DayViewProps {
   schedule?: DaySchedule;
@@ -43,7 +43,7 @@ const courseColorMap = new Map(
   COURSE_CODES.map((code, index) => [
     code,
     COLOR_SCHEMES[(index % COLOR_SCHEMES.length) - 1],
-  ])
+  ]),
 );
 
 const getCourseColor = (value: string) => {
@@ -111,7 +111,7 @@ export default function DayView({ schedule }: DayViewProps) {
 
   const processedEvents: PositionedEvent[] = schedule.data
     .filter((slot): slot is typeof slot & { value: string } =>
-      Boolean(slot.value)
+      Boolean(slot.value),
     )
     .flatMap((slot) => {
       const startTime = convertTimeToNumber(slot.start);
@@ -131,7 +131,7 @@ export default function DayView({ schedule }: DayViewProps) {
         splitIndex: index,
         totalSplits: values.length,
         continuationGroup: value.match(
-          /CE \d[A-Z] \d{3}(?:\s*\([^)]+\))?/
+          /CE \d[A-Z] \d{3}(?:\s*\([^)]+\))?/,
         )?.[0],
         isOverlapping: false,
       }));
@@ -147,7 +147,7 @@ export default function DayView({ schedule }: DayViewProps) {
           convertTimeToNumber(otherEvent.end) ===
             convertTimeToNumber(event.end);
         return sameTimeSlot;
-      }
+      },
     );
 
     if (overlappingEvents.length > 0) {
@@ -168,7 +168,7 @@ export default function DayView({ schedule }: DayViewProps) {
       const previousEvent = acc.find(
         (e) =>
           e.continuationGroup === event.continuationGroup &&
-          convertTimeToNumber(e.end) === convertTimeToNumber(event.start)
+          convertTimeToNumber(e.end) === convertTimeToNumber(event.start),
       );
 
       if (previousEvent) {
@@ -184,7 +184,7 @@ export default function DayView({ schedule }: DayViewProps) {
 
       return acc;
     },
-    []
+    [],
   );
 
   return (
@@ -195,7 +195,7 @@ export default function DayView({ schedule }: DayViewProps) {
             <div
               key={time}
               className={clsx(
-                "absolute text-xs sm:text-sm text-gray-700 dark:text-[#B2B2B2]"
+                "absolute text-xs sm:text-sm text-gray-700 dark:text-[#B2B2B2]",
               )}
               style={{
                 top: `${(index / (timeSlots.length - 1)) * 100}%`,
@@ -232,7 +232,7 @@ export default function DayView({ schedule }: DayViewProps) {
                   "absolute w-full border-t border-gray-200 dark:border-[#303030]",
                   index % 2 !== 0
                     ? "bg-gray-100 dark:bg-inherit"
-                    : "bg-gray-200 dark:bg-[#303030]"
+                    : "bg-gray-200 dark:bg-[#303030]",
                 )}
                 style={{
                   top: `${(index / (timeSlots.length - 1)) * 100}%`,
@@ -259,7 +259,7 @@ export default function DayView({ schedule }: DayViewProps) {
                   `absolute p-2 rounded-md border border-l-4 border-l-[${colors.bg}]`,
                   colors.bg,
                   colors.border,
-                  "hover:brightness-95 transition-colors cursor-pointer overflow-hidden"
+                  "hover:brightness-95 transition-colors cursor-pointer overflow-hidden",
                 )}
                 style={{
                   top: `${event.startPosition}%`,
@@ -276,7 +276,7 @@ export default function DayView({ schedule }: DayViewProps) {
                 <div
                   className={clsx(
                     "text-xs sm:text-sm break-words overflow-hidden",
-                    colors.text
+                    colors.text,
                   )}
                 >
                   {event.value}

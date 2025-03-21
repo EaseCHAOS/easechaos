@@ -66,7 +66,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
     const columnWidth = 100 / 24;
     const hoursSince7am = hours - 7;
     const totalMinutesSince7am = hoursSince7am * 60 + minutes;
-    const columnPosition = totalMinutesSince7am / 30; // How many 30-min columns have passed
+    const columnPosition = totalMinutesSince7am / 30;
 
     return columnPosition * columnWidth;
   }, [currentTime]);
@@ -91,7 +91,6 @@ export default function WeekView({ schedule }: WeekViewProps) {
       courseColorMap.get(match[0] as (typeof COURSE_CODES)[number]) ||
       DEFAULT_COLOR;
 
-    // Check for system theme if theme is set to 'system'
     const isSystemTheme = theme === "system";
     const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
       .matches
@@ -119,37 +118,40 @@ export default function WeekView({ schedule }: WeekViewProps) {
     ...day,
     events: day.data
       .filter((slot): slot is typeof slot & { value: string } =>
-        Boolean(slot.value)
+        Boolean(slot.value),
       )
-      .reduce((acc, current) => {
-        const previousEvent = acc[acc.length - 1];
+      .reduce(
+        (acc, current) => {
+          const previousEvent = acc[acc.length - 1];
 
-        const isSameCourse =
-          previousEvent?.value?.trim() === current.value.trim();
-        const isSequential =
-          previousEvent?.end === current.start ||
-          (previousEvent?.end === "12:00" && current.start === "12:30");
+          const isSameCourse =
+            previousEvent?.value?.trim() === current.value.trim();
+          const isSequential =
+            previousEvent?.end === current.start ||
+            (previousEvent?.end === "12:00" && current.start === "12:30");
 
-        const isHorizontalDuplicate =
-          previousEvent?.start === current.start &&
-          previousEvent?.end === current.end &&
-          previousEvent?.value?.trim() === current.value.trim();
+          const isHorizontalDuplicate =
+            previousEvent?.start === current.start &&
+            previousEvent?.end === current.end &&
+            previousEvent?.value?.trim() === current.value.trim();
 
-        if ((isSameCourse && isSequential) || isHorizontalDuplicate) {
-          return [
-            ...acc.slice(0, -1),
-            {
-              ...previousEvent,
-              end: isSequential ? current.end : previousEvent.end,
-              horizontalSpan: isHorizontalDuplicate
-                ? (previousEvent.horizontalSpan || 1) + 1
-                : 1,
-            },
-          ];
-        }
+          if ((isSameCourse && isSequential) || isHorizontalDuplicate) {
+            return [
+              ...acc.slice(0, -1),
+              {
+                ...previousEvent,
+                end: isSequential ? current.end : previousEvent.end,
+                horizontalSpan: isHorizontalDuplicate
+                  ? (previousEvent.horizontalSpan || 1) + 1
+                  : 1,
+              },
+            ];
+          }
 
-        return [...acc, { ...current, horizontalSpan: 1 }];
-      }, [] as ((typeof day.data)[0] & { horizontalSpan?: number })[])
+          return [...acc, { ...current, horizontalSpan: 1 }];
+        },
+        [] as ((typeof day.data)[0] & { horizontalSpan?: number })[],
+      )
       .flatMap((slot) => {
         if (!slot.value) return [];
 
@@ -242,7 +244,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
                             index === timeSlots.length - 1 && "border-r",
                             index % 2 !== 0
                               ? "bg-gray-100 dark:bg-inherit"
-                              : "bg-gray-200 dark:bg-[#303030]"
+                              : "bg-gray-200 dark:bg-[#303030]",
                           )}
                         />
                       ))}
@@ -258,7 +260,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
                             colors.bg,
                             colors.border,
                             "hover:brightness-95 transition-colors cursor-pointer",
-                            "flex items-center justify-center"
+                            "flex items-center justify-center",
                           )}
                           style={{
                             left: `${slot.startPosition}%`,
@@ -280,7 +282,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
                           <div
                             className={clsx(
                               "text-xs line-clamp-2 overflow-hidden text-ellipsis text-center",
-                              colors.text
+                              colors.text,
                             )}
                           >
                             {slot.value}

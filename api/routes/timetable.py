@@ -1,8 +1,6 @@
 import os
 import logging
 
-
-
 from fastapi import APIRouter
 from pydantic import BaseModel
 from api.extract.extract_table import get_time_table
