@@ -22,11 +22,6 @@ router = APIRouter()
 class TimeTableRequest(BaseModel):
     """
     Represents a request for a timetable (lecture or exam).
-
-    Attributes:
-    - filename (str): The name of the file for the timetable (without extension).
-    - class_pattern (str): The pattern for the class.
-    - is_exam (bool): Whether to process as exam timetable (default: False)
     """
     filename: str
     class_pattern: str
@@ -35,21 +30,14 @@ class TimeTableRequest(BaseModel):
 def get_json_table(request: TimeTableRequest):
     """
     Get the timetable in JSON format (either lecture or exam).
-
-    Parameters:
-    - request: TimeTableRequest - the request object containing filename, class pattern, and type
-
-    Returns:
-    - dict: a dictionary containing the table in JSON format
     """
-    table = get_table_from_cache(request.filename, request.class_pattern, request.is_exam)
+    # Normalize filename once here
+    base_filename = request.filename.replace(".xlsx", "")  # Strip any .xlsx
+    filename = f"{base_filename}.xlsx"  # Add it back once
+    table = get_table_from_cache(base_filename, request.class_pattern, request.is_exam)  # Use base_filename for cache key
 
     if table is None:
-        filename = request.filename
-        if not filename.endswith('.xlsx'):
-            filename += '.xlsx'
         full_path = os.path.join(DRAFTS_FOLDER, filename)
-
         if not os.path.exists(full_path):
             raise FileNotFoundError(f"Timetable file not found: {full_path}")
 
@@ -57,7 +45,7 @@ def get_json_table(request: TimeTableRequest):
             table = get_exam_timetable(full_path, request.class_pattern).to_json(orient="records")
         else:
             table = get_time_table(full_path, request.class_pattern).to_json(orient="records")
-        add_table_to_cache(table, request.filename, request.class_pattern, request.is_exam)
+        add_table_to_cache(table, base_filename, request.class_pattern, request.is_exam)  # Use base_filename for cache
 
     return json.loads(table)
 
@@ -88,13 +76,11 @@ def convert_to_24hour(time_str: str, previous_was_pm: bool = False) -> str:
 @router.post("/get_time_table")
 async def get_time_table_endpoint(request: TimeTableRequest):
     """Endpoint for generating a parsed JSON timetable (lecture or exam) and recording clashes"""
-    _ = get_table_from_cache(request.filename, request.class_pattern, request.is_exam)
+    base_filename = request.filename.replace(".xlsx", "")  # Strip any .xlsx
+    filename = f"{base_filename}.xlsx"  # Add it back once
+    _ = get_table_from_cache(base_filename, request.class_pattern, request.is_exam)
 
-    filename = request.filename
-    if not filename.endswith('.xlsx'):
-        filename += '.xlsx'
     file_path = os.path.join(DRAFTS_FOLDER, filename)
-
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Timetable file not found: {file_path}")
 
@@ -117,7 +103,6 @@ async def get_time_table_endpoint(request: TimeTableRequest):
             except ValueError as e:
                 logger.error(f"Invalid time format in exam entry: {entry} - {e}")
                 continue
-
 
             table_data.append({
                 "day": date,

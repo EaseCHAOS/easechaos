@@ -115,6 +115,7 @@ export default function Calendar() {
         body: JSON.stringify({
           filename: "Draft_3",
           class_pattern: `${dept} ${year}`,
+          is_exam: false,
         }),
       },
     );

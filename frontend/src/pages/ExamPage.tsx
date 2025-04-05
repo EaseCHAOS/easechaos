@@ -74,45 +74,21 @@ export default function ExamPage() {
     );
   }
 
-  // For development/testing, use sample data if API call isn't implemented yet
-  const sampleData: TimetableData = {
-    data: [
-      {
-        day: "Monday, 14th April 2025",
-        data: [
-          {
-            start: "11:00",
-            end: "14:00",
-            value: "COMPUTER NETWORKS",
-            class: "CE 4A",
-            location: "FF 3",
-            invigilator: null,
-          },
-        ],
-      },
-      {
-        day: "Monday, 14th April 2025",
-        data: [
-          {
-            start: "11:00",
-            end: "14:00",
-            value: "COMPUTER NETWORKS",
-            class: "CE 4B",
-            location: "FI A3",
-            invigilator: null,
-          },
-        ],
-      },
-      // Add more sample data as needed
-    ],
-    version: "sample-version",
-  };
+  if (!examData) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex items-center justify-center">
+        <div className="text-[#71717A] dark:text-[#D4D4D8]">
+          No exam timetable found.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAFAFA] dark:bg-[#02040A] min-h-screen">
       <div className="h-full w-full relative max-w-6xl mx-auto p-4">
         <div className="bg-white dark:bg-[#262626] rounded-lg shadow-lg flex flex-col h-full">
-          <div className="p-4 border-b dark:border-[#303030] top-0 bg-white dark:bg-[#262626] z-50 rounded-t-md relative">
+          <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-50 rounded-t-md">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4">
                 <button
@@ -133,12 +109,7 @@ export default function ExamPage() {
           </div>
 
           <div className="flex-1 overflow-auto p-4">
-            {examData ? (
-              <ExamView timetableData={examData} />
-            ) : (
-              // Use sample data for development/testing
-              <ExamView timetableData={sampleData} />
-            )}
+            <ExamView timetableData={examData} />
           </div>
         </div>
       </div>
