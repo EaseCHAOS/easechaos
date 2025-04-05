@@ -13,7 +13,6 @@ from api.config.redis_config import (
     add_table_to_cache,
 )
 
-# Find the path of the drafts
 current_script_path = Path(__file__)
 project_root_path = current_script_path.parents[1]
 DRAFTS_FOLDER = project_root_path / "drafts"
@@ -43,11 +42,9 @@ def get_json_table(request: TimeTableRequest):
     Returns:
     - dict: a dictionary containing the table in JSON format
     """
-    # Use is_exam in cache key
     table = get_table_from_cache(request.filename, request.class_pattern, request.is_exam)
 
     if table is None:
-        # Append .xlsx extension if not provided
         filename = request.filename
         if not filename.endswith('.xlsx'):
             filename += '.xlsx'
@@ -64,7 +61,6 @@ def get_json_table(request: TimeTableRequest):
 
     return json.loads(table)
 
-# Set up logging
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
@@ -74,7 +70,6 @@ def convert_to_24hour(time_str: str, previous_was_pm: bool = False) -> str:
         raise ValueError("Time string cannot be empty")
 
     try:
-        # Handle AM/PM suffixes
         time_str = time_str.strip().upper()
         is_pm = 'PM' in time_str
         time_clean = time_str.replace('AM', '').replace('PM', '').strip()
@@ -93,10 +88,8 @@ def convert_to_24hour(time_str: str, previous_was_pm: bool = False) -> str:
 @router.post("/get_time_table")
 async def get_time_table_endpoint(request: TimeTableRequest):
     """Endpoint for generating a parsed JSON timetable (lecture or exam) and recording clashes"""
-    # Use is_exam in cache check
     _ = get_table_from_cache(request.filename, request.class_pattern, request.is_exam)
 
-    # Generate a hash based on the file content
     filename = request.filename
     if not filename.endswith('.xlsx'):
         filename += '.xlsx'
@@ -138,7 +131,6 @@ async def get_time_table_endpoint(request: TimeTableRequest):
                 }]
             })
     else:
-        # Process lecture timetable
         table_data = []
         for index, day in enumerate(json_data):
             day_data = []

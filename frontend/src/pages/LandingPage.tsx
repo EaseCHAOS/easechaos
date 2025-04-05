@@ -35,6 +35,12 @@ export default function LandingPage() {
     }
   };
 
+  const handleViewExamSchedule = () => {
+    if (selectedDept && selectedYear) {
+      navigate(`/exam/${selectedDept}/${selectedYear.id}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto overflow-hidden relative">
       <div className="absolute top-0 w-full h-[60vh] dark:h-[70vh] bg-[url('../assets/light_pattern.svg')] dark:bg-[url('../assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-15 opacity-65" />
@@ -91,7 +97,7 @@ export default function LandingPage() {
               "rounded-full",
               "text-md text-[#71717A] dark:text-[#D4D4D8]",
               "hover:bg-gray-100 dark:hover:bg-[#303030]",
-              "transition-colors duration-200"
+              "transition-colors duration-200",
             )}
           >
             Star us on GitHub
@@ -147,7 +153,7 @@ export default function LandingPage() {
                 value={selectedYear ? selectedYear.name : ""}
                 onChange={(e) =>
                   setSelectedYear(
-                    years.find((y) => y.name === e.target.value) || ""
+                    years.find((y) => y.name === e.target.value) || "",
                   )
                 }
                 className="w-full p-3 bg-[#F4F4F5] dark:bg-[#303030] border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#D4D4D8]"
@@ -164,11 +170,21 @@ export default function LandingPage() {
             <button
               onClick={handleViewSchedule}
               disabled={!selectedDept || !selectedYear}
-              className="w-full bg-[#52525B] text-white py-4 px-6 rounded-md hover:bg-[#18181B]-700 
+              className="w-full bg-[#52525B] text-white py-4 px-6 rounded-md hover:bg-[#18181B]-700
                      disabled:bg-[#F4F4F5] disabled:text-[#18181B] disabled:cursor-not-allowed
                      transition-colors duration-200"
             >
               View Schedule
+            </button>
+
+            <button
+              onClick={handleViewExamSchedule}
+              disabled={!selectedDept || !selectedYear}
+              className="w-full bg-green-500 text-white py-4 px-6 rounded-md hover:bg-green-600
+                       disabled:bg-[#F4F4F5] disabled:text-[#18181B] disabled:cursor-not-allowed
+                       transition-colors duration-200 mt-2"
+            >
+              View Exam Schedule
             </button>
           </div>
         </div>

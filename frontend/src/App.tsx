@@ -6,6 +6,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
+import ExamPage from "./pages/ExamPage";
 import Calendar from "./components/Calendar";
 import { Analytics } from "@vercel/analytics/react";
 import { useEffect, useState } from "react";
@@ -40,11 +41,13 @@ function AppContent() {
         }
       />
       <Route path="/timetable/:dept/:year" element={<Calendar />} />
+      <Route path="/exam/:dept/:year" element={<ExamPage />} />
     </Routes>
   );
 }
 
 function App() {
+  console.log("It is running");
   return (
     <Router>
       <Analytics />
