@@ -11,6 +11,7 @@ export default function ExamPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [examData, setExamData] = useState<TimetableData | null>(null);
+  const [selectedClass, setSelectedClass] = useState<string>("all");
 
   useEffect(() => {
     if (!dept || !year) {
@@ -33,9 +34,9 @@ export default function ExamPage() {
               "Cache-Control": "no-cache, no-store, must-revalidate",
             },
             body: JSON.stringify({
-              filename: "Draft_3",
+              filename: "Draft_1_ex",
               class_pattern: `${dept} ${year}`,
-              is_exam: false,
+              is_exam: true,
             }),
           },
         );
@@ -55,6 +56,19 @@ export default function ExamPage() {
 
     fetchExamData();
   }, [dept, year]);
+
+  // Get unique classes from exam data
+  const getUniqueClasses = () => {
+    if (!examData) return [];
+
+    return Array.from(
+      new Set(
+        examData.data.flatMap((day) => day.data.map((exam) => exam.class)),
+      ),
+    ).sort();
+  };
+
+  const classes = getUniqueClasses();
 
   if (isLoading) {
     return (
@@ -102,14 +116,26 @@ export default function ExamPage() {
                 </h1>
               </div>
 
-              <div className="flex">
-                <ThemeToggle />
+              <div className="flex items-center gap-4 z-10">
+                <select
+                  value={selectedClass}
+                  onChange={(e) => setSelectedClass(e.target.value)}
+                  className="w-full bg-[#F4F4F5] dark:bg-[#262626] p-2 border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#D4D4D8]"
+                >
+                  <option value="all">All Classes</option>
+                  {classes.map((cls) => (
+                    <option key={cls} value={cls}>
+                      {cls}
+                    </option>
+                  ))}
+                </select>
+                <ThemeToggle props="-right-5" />
               </div>
             </div>
           </div>
 
           <div className="flex-1 overflow-auto p-4">
-            <ExamView timetableData={examData} />
+            <ExamView timetableData={examData} selectedClass={selectedClass} />
           </div>
         </div>
       </div>

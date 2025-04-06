@@ -21,32 +21,10 @@ import { ExamData, DayData, TimetableData } from "../types";
 
 interface ExamViewProps {
   timetableData: TimetableData;
+  selectedClass?: string;
   className?: string;
 }
 
-// Normalize the data to group by day and subject
-const normalizeData = (data: DayData[]) => {
-  const normalizedData: Record<string, Record<string, ExamData[]>> = {};
-
-  data.forEach((dayItem) => {
-    const day = dayItem.day;
-    const examData = dayItem.data[0];
-
-    if (!normalizedData[day]) {
-      normalizedData[day] = {};
-    }
-
-    if (!normalizedData[day][examData.value]) {
-      normalizedData[day][examData.value] = [];
-    }
-
-    normalizedData[day][examData.value].push(examData);
-  });
-
-  return normalizedData;
-};
-
-// Convert date string to Date object
 const parseDate = (dateStr: string) => {
   const [dayName, dayNum, month, year] = dateStr.split(/,\s+|th\s+|\s+/);
   const monthMap: Record<string, number> = {
@@ -67,133 +45,109 @@ const parseDate = (dateStr: string) => {
   return new Date(parseInt(year), monthMap[month], parseInt(dayNum));
 };
 
-export default function ExamView({ timetableData, className }: ExamViewProps) {
-  const [selectedClass, setSelectedClass] = useState<string>("all");
+export default function ExamView({
+  timetableData,
+  selectedClass = "all",
+  className,
+}: ExamViewProps) {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState<string>("today");
 
-  const normalizedData = normalizeData(timetableData.data);
+  const organizeExamsByDayAndSubject = (
+    data: DayData[],
+    selectedClass: string,
+  ) => {
+    const result: {
+      day: string;
+      subjects: { name: string; exams: ExamData[] }[];
+    }[] = [];
 
-  const classes = Array.from(
-    new Set(
-      timetableData.data.flatMap((day) => day.data.map((exam) => exam.class)),
-    ),
-  ).sort();
+    const dayGroups: Record<string, DayData[]> = {};
+    data.forEach((dayItem) => {
+      if (!dayGroups[dayItem.day]) {
+        dayGroups[dayItem.day] = [];
+      }
+      dayGroups[dayItem.day].push(dayItem);
+    });
 
-  const filterByClass = (exams: ExamData[]) => {
-    if (selectedClass === "all") return exams;
-    return exams.filter((exam) => exam.class === selectedClass);
+    Object.entries(dayGroups).forEach(([day, dayItems]) => {
+      const subjectMap: Record<string, ExamData[]> = {};
+
+      dayItems.forEach((dayItem) => {
+        dayItem.data.forEach((exam) => {
+          if (selectedClass !== "all" && exam.class !== selectedClass) {
+            return;
+          }
+
+          if (!subjectMap[exam.value]) {
+            subjectMap[exam.value] = [];
+          }
+
+          subjectMap[exam.value].push(exam);
+        });
+      });
+
+      const subjects = Object.entries(subjectMap).map(([name, exams]) => ({
+        name,
+        exams,
+      }));
+      if (subjects.length > 0) {
+        result.push({ day, subjects });
+      }
+    });
+
+    return result;
   };
 
   const getTodayExams = () => {
-    const result: {
-      day: string;
-      subjects: { name: string; exams: ExamData[] }[];
-    }[] = [];
-
-    Object.entries(normalizedData).forEach(([day, subjects]) => {
-      const date = parseDate(day);
-
-      if (isToday(date)) {
-        const subjectList = Object.entries(subjects)
-          .map(([name, exams]) => ({
-            name,
-            exams: filterByClass(exams),
-          }))
-          .filter((subject) => subject.exams.length > 0);
-
-        if (subjectList.length > 0) {
-          result.push({ day, subjects: subjectList });
-        }
-      }
+    const allExams = organizeExamsByDayAndSubject(
+      timetableData.data,
+      selectedClass,
+    );
+    return allExams.filter((dayExam) => {
+      const date = parseDate(dayExam.day);
+      return isToday(date);
     });
-
-    return result;
   };
 
   const getThisWeekExams = () => {
-    const result: {
-      day: string;
-      subjects: { name: string; exams: ExamData[] }[];
-    }[] = [];
-
-    Object.entries(normalizedData).forEach(([day, subjects]) => {
-      const date = parseDate(day);
-
-      if (isThisWeek(date) && !isToday(date)) {
-        const subjectList = Object.entries(subjects)
-          .map(([name, exams]) => ({
-            name,
-            exams: filterByClass(exams),
-          }))
-          .filter((subject) => subject.exams.length > 0);
-
-        if (subjectList.length > 0) {
-          result.push({ day, subjects: subjectList });
-        }
-      }
+    const allExams = organizeExamsByDayAndSubject(
+      timetableData.data,
+      selectedClass,
+    );
+    return allExams.filter((dayExam) => {
+      const date = parseDate(dayExam.day);
+      return isThisWeek(date) && !isToday(date);
     });
-
-    return result;
   };
 
-  // Get exams for next week
   const getNextWeekExams = () => {
-    const result: {
-      day: string;
-      subjects: { name: string; exams: ExamData[] }[];
-    }[] = [];
+    const allExams = organizeExamsByDayAndSubject(
+      timetableData.data,
+      selectedClass,
+    );
     const nextWeekStart = addWeeks(currentDate, 1);
 
-    Object.entries(normalizedData).forEach(([day, subjects]) => {
-      const date = parseDate(day);
-
-      if (
+    return allExams.filter((dayExam) => {
+      const date = parseDate(dayExam.day);
+      return (
         isAfter(date, nextWeekStart) &&
         isBefore(date, addWeeks(nextWeekStart, 1))
-      ) {
-        const subjectList = Object.entries(subjects)
-          .map(([name, exams]) => ({
-            name,
-            exams: filterByClass(exams),
-          }))
-          .filter((subject) => subject.exams.length > 0);
-
-        if (subjectList.length > 0) {
-          result.push({ day, subjects: subjectList });
-        }
-      }
+      );
     });
-
-    return result;
   };
 
-  // Get exams for last week
   const getLastWeekExams = () => {
-    const result: {
-      day: string;
-      subjects: { name: string; exams: ExamData[] }[];
-    }[] = [];
+    const allExams = organizeExamsByDayAndSubject(
+      timetableData.data,
+      selectedClass,
+    );
     const lastWeekStart = subWeeks(currentDate, 1);
 
-    Object.entries(normalizedData).forEach(([day, subjects]) => {
-      const date = parseDate(day);
-
-      if (isAfter(date, lastWeekStart) && isBefore(date, currentDate)) {
-        const subjectList = Object.entries(subjects)
-          .map(([name, exams]) => ({
-            name,
-            exams: filterByClass(exams),
-          }))
-          .filter((subject) => subject.exams.length > 0);
-
-        if (subjectList.length > 0) {
-          result.push({ day, subjects: subjectList });
-        }
-      }
+    return allExams.filter((dayExam) => {
+      const date = parseDate(dayExam.day);
+      return isAfter(date, lastWeekStart) && isBefore(date, currentDate);
     });
-
-    return result;
   };
 
   // Render exam cards
@@ -261,7 +215,6 @@ export default function ExamView({ timetableData, className }: ExamViewProps) {
     ));
   };
 
-  // Get counts for badge display
   const todayCount = getTodayExams().reduce(
     (acc, day) =>
       acc +
@@ -305,18 +258,12 @@ export default function ExamView({ timetableData, className }: ExamViewProps) {
   return (
     <div
       className={clsx(
-        "bg-white dark:bg-[#262626] rounded-lg shadow-lg flex flex-col",
+        "bg-white dark:bg-[#262626] rounded-lg shadow-lg flex flex-col min-h-[80vh]",
         className,
       )}
     >
-      <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] z-50 rounded-t-md">
+      <div className="p-4 border-b dark:border-[#303030] sticky top-0 bg-white dark:bg-[#262626] rounded-t-md">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold dark:text-[#F0F6FC]">
-              Exam Timetable
-            </h1>
-          </div>
-
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-2">
               <ChevronLeft
@@ -349,19 +296,6 @@ export default function ExamView({ timetableData, className }: ExamViewProps) {
                 }
               />
             </div>
-
-            <select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-              className="w-full bg-[#F4F4F5] dark:bg-[#262626] p-2 border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#D4D4D8]"
-            >
-              <option value="all">All Classes</option>
-              {classes.map((cls) => (
-                <option key={cls} value={cls}>
-                  {cls}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
       </div>
@@ -413,22 +347,6 @@ export default function ExamView({ timetableData, className }: ExamViewProps) {
             {nextWeekCount > 0 && (
               <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-[#52525B] text-white">
                 {nextWeekCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("last-week")}
-            className={clsx(
-              "flex-1 py-2 px-3 rounded-md text-sm font-medium relative",
-              activeTab === "last-week"
-                ? "bg-white dark:bg-[#262626] shadow-sm text-black dark:text-[#F0F6FC]"
-                : "text-[#71717A] dark:text-[#D4D4D8] hover:bg-gray-200 dark:hover:bg-[#3e3e3e]",
-            )}
-          >
-            Last Week
-            {lastWeekCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-[#52525B] text-white">
-                {lastWeekCount}
               </span>
             )}
           </button>

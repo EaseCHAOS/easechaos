@@ -52,7 +52,31 @@ def get_json_table(request: TimeTableRequest):
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
-def convert_to_24hour(time_str: str, previous_was_pm: bool = False) -> str:
+def lectures_convert_to_24hour(time_str: str, previous_was_pm: bool = False) -> str:
+    """Convert time to 24-hour format based on class schedule rules."""
+    if not time_str or not time_str.strip():
+        raise ValueError("Time string cannot be empty")
+
+    try:
+        hours, minutes = map(int, time_str.strip().split(':'))
+    except ValueError as e:
+        raise e
+
+    if not previous_was_pm:
+        if 7 <= hours <= 11:
+                   return f"{hours}:{minutes:02d}"
+        elif hours == 12:
+                return f"12:{minutes:02d}"
+        else:
+            return f"{hours + 12}:{minutes:02d}"
+    else:
+        if hours == 12:
+            return f"12:{minutes:02d}"
+        elif hours <= 7:
+            return f"{hours + 12}:{minutes:02d}"
+        return f"{hours}:{minutes:02d}"
+
+def exams_convert_to_24hour(time_str: str, previous_was_pm: bool = False) -> str:
     """Convert time to 24-hour format based on class schedule rules."""
     if not time_str or not time_str.strip():
         raise ValueError("Time string cannot be empty")
@@ -98,8 +122,8 @@ async def get_time_table_endpoint(request: TimeTableRequest):
                 continue
 
             try:
-                start_24h = convert_to_24hour(entry.get('START', ''))
-                end_24h = convert_to_24hour(entry.get('END', ''))
+                start_24h = exams_convert_to_24hour(entry.get('START', ''))
+                end_24h = exams_convert_to_24hour(entry.get('END', ''))
             except ValueError as e:
                 logger.error(f"Invalid time format in exam entry: {entry} - {e}")
                 continue
@@ -137,10 +161,10 @@ async def get_time_table_endpoint(request: TimeTableRequest):
                     continue
 
                 try:
-                    start_24h = convert_to_24hour(start)
+                    start_24h = lectures_convert_to_24hour(start)
                     start_hour = int(start_24h.split(':')[0])
                     is_pm = start_hour >= 12
-                    end_24h = convert_to_24hour(end, previous_was_pm)
+                    end_24h = lectures_convert_to_24hour(end, previous_was_pm)
 
                     if current_slot and current_slot["value"] == value and current_slot["end"] == start_24h:
                         current_slot["end"] = end_24h

@@ -74,7 +74,7 @@ export default function LandingPage() {
             ></path>
           </svg>
           <span className="text-sm text-green-900">
-            Coming soon: Examination schedule view
+            Available now: Examination schedule view
           </span>
         </div>
       )}

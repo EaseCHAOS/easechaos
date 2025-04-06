@@ -95,7 +95,7 @@ export default function Calendar() {
         console.log("New version detected, updating cache...");
         localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
         localStorage.setItem(`schedule:${dept}:${year}:version`, version);
-        localStorage.removeItem(`${dept}:${year}:lastCheck`); // Clear last check time
+        localStorage.removeItem(`${dept}:${year}:lastCheck`);
         setSchedule(data);
         return;
       }
@@ -222,16 +222,13 @@ export default function Calendar() {
       }
     };
 
-    // Check for updates every 5 minutes
     const intervalId = setInterval(checkForUpdates, 5 * 60 * 1000);
 
-    // Initial check
     checkForUpdates();
 
     return () => clearInterval(intervalId);
   }, [dept, year]);
 
-  // Add auto-refresh effect
   useEffect(() => {
     if (!dept || !year) return;
 
@@ -286,12 +283,11 @@ export default function Calendar() {
     const intervalId = setInterval(
       () => {
         if (!document.hidden) {
-          // Only refresh if tab is visible
           refreshData();
         }
       },
       5 * 60 * 1000,
-    ); // 5 minutes
+    );
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -319,33 +315,23 @@ export default function Calendar() {
     (day) => day.day === dayNames[selectedDate.getDay() - 1],
   );
 
-  // format both week and day view data
   const formatCellContent = (value: string) => {
     if (!value) return value;
 
-    // Split the string at brackets to preserve venue information
     const [mainText, ...bracketsContent] = value.split(/(\(.*?\))/g);
 
-    // Format only the main text (before brackets)
     const formattedMain = mainText
-      // Remove program codes at start (e.g., "CE 1B 141", "CE 1A, CE 1B 141")
       .replace(/^(?:[A-Z]{2,3}\s+)+/g, "")
-      // Remove program codes before numbers (e.g., "1B CE 141", "1A, 1B CE 141")
       .replace(/\s+[A-Z]{2,3}\s+(?=\d)/g, " ")
-      // Remove multiple program codes (e.g., "SP, LA, GL 151", "CE, EE 141")
       .replace(/(?:[A-Z]{2,3},?\s*)+(?=\d)/g, "")
-      // Remove program codes between group and number (e.g., "1A CE 141")
       .replace(/(\d[A-Z])\s+[A-Z]{2,3}\s+(\d)/g, "$1 $2")
-      // Clean up extra spaces and commas
       .replace(/\s*,\s*/g, ", ")
       .replace(/\s+/g, " ")
       .trim();
 
-    // Rejoin with preserved brackets content
     return formattedMain + bracketsContent.join("");
   };
 
-  // format week view data
   const scheduleData = schedule.map((day) => ({
     ...day,
     data: day.data.map((slot) => ({
@@ -354,7 +340,6 @@ export default function Calendar() {
     })),
   }));
 
-  // format day view data
   const formattedDaySchedule = currentDaySchedule
     ? {
         ...currentDaySchedule,
@@ -441,7 +426,7 @@ export default function Calendar() {
 
               <div className="flex items-center justify-center w-full sm:w-auto gap-4">
                 <div className="flex">
-                  <ThemeToggle />
+                  <ThemeToggle props="-right-30" />
                 </div>
                 {viewMode === "week" && (
                   <div className="relative z-[9999]">

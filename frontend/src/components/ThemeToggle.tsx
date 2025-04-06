@@ -3,7 +3,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ props }: { props: string }) {
   const { theme, setTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -37,7 +37,7 @@ export default function ThemeToggle() {
           "hover:bg-gray-100 dark:hover:bg-[#303030]",
           "transition-colors",
           "border border-gray-200 dark:border-[#303030]",
-          "relative flex items-center"
+          "relative flex items-center",
         )}
       >
         {theme === "dark" ? (
@@ -52,7 +52,7 @@ export default function ThemeToggle() {
       {showDropdown && (
         <div
           ref={dropdownRef}
-          className="absolute top-full -right-30 mt-1 z-[9999]"
+          className={`absolute top-full ${props} mt-1 z-[9999]`}
         >
           <div className="w-48 rounded-md shadow-lg bg-white dark:bg-[#262626] ring-1 ring-black ring-opacity-5">
             {themeOptions.map(({ value, icon: Icon, label }) => (
@@ -65,7 +65,7 @@ export default function ThemeToggle() {
                 className={clsx(
                   "w-full px-4 py-2 text-left flex items-center space-x-2",
                   "hover:bg-gray-100 dark:hover:bg-[#303030]",
-                  theme === value && "bg-gray-100 dark:bg-[#303030]"
+                  theme === value && "bg-gray-100 dark:bg-[#303030]",
                 )}
               >
                 <Icon className="w-4 h-4 dark:text-[#B2B2B2]" />
