@@ -8,6 +8,11 @@ __pycache__/
 # C extensions
 *.so
 
+tests/
+
+.env
+.git
+
 node_modules/
 
 .DS_Store
