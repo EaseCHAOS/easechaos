@@ -8,7 +8,7 @@ install:
 	cd frontend && pnpm install
 
 run-backend:
-	python3 -m uvicorn app:app --reload
+	python3 -m uvicorn app:app --reload --port 3000
 
 run-frontend:
 	cd frontend && pnpm run dev

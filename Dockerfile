@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt /app/
 
 RUN apt-get update \
-    && apt-get install -y gcc python3-dev \
+    && apt-get install -y gcc python3-dev curl \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
     && apt-get purge -y gcc python3-dev \
