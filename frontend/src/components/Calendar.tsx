@@ -81,7 +81,7 @@ export default function Calendar() {
             Expires: "0",
           },
           body: JSON.stringify({
-            filename: "Draft_3",
+            filename: "Draft_2025",
             class_pattern: `${dept} ${year}`,
           }),
         },
