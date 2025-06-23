@@ -20,7 +20,7 @@ def _get_time_row(df: pd.DataFrame) -> pd.Series:
         The time row from the dataframe.
     """
     for row in df.iterrows():
-        if re.match(r"^\d{1,2}:\d{1,2}-\d{1,2}:\d{1,2}$", str(row[1].iloc[1])):
+        if any(re.match(r"^\d{1,2}:\d{1,2}-\d{1,2}:\d{1,2}$", str(cell).strip()) for cell in row[1]):
             return row
 
 
