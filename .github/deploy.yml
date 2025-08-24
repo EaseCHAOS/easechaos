@@ -1,0 +1,40 @@
+name: CI/CD Pipeline (Direct VPS Build)
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd easechaos
+
+            # Pull latest code from repo
+            git fetch origin
+            BRANCH=${GITHUB_REF_NAME}
+            git checkout "$BRANCH" && git reset --hard "origin/$BRANCH"
+            
+            # Map branch to compose file
+            if [ "$BRANCH" = "main" ]; then
+              COMPOSE_FILE="docker-compose.dev.yml"
+            else
+              COMPOSE_FILE="docker-compose.dev.yml"
+            fi
+
+            # Rebuild and restart
+            docker-compose -f "$COMPOSE_FILE" up --build -d
+
