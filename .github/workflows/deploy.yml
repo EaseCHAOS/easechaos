@@ -43,7 +43,7 @@ jobs:
 
             # Map branch to compose file
             if [ "$BRANCH" = "main" ]; then
-              COMPOSE_FILE="docker-compose.dev.yml"
+              COMPOSE_FILE="docker-compose.yml"
             else
               COMPOSE_FILE="docker-compose.dev.yml"
             fi
