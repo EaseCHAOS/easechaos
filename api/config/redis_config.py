@@ -22,16 +22,18 @@ settings = Settings()
 
 def get_redis_connection():
     try:
+        logger.info("Redis connection established")
         return redis.Redis(
             host=settings.REDIS_HOST,
             port=settings.REDIS_PORT,
             password=settings.REDIS_PASSWORD,
             db=0,
-            ssl=True,
+            ssl=False,
             decode_responses=True,
             socket_timeout=5,
             retry_on_timeout=True,
         )
+
     except redis.ConnectionError as e:
         logger.error(f"Redis connection failed: {e}")
         raise
