@@ -54,4 +54,12 @@ jobs:
             docker-compose -f "$COMPOSE_FILE" up --build -d
 
             echo "===== Deployment completed successfully ====="
-
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+              echo "✅ Deployment successful!"
+          else
+              echo "❌ Deployment failed!"
+          fi
