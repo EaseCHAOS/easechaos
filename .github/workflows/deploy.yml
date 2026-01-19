@@ -1,4 +1,4 @@
-name: CI/CD Pipeline (Direct VPS Build)
+name: EASECHAOS CI/CD Pipeline
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
             REPO_NAME="easechaos"
             APP_DIR="/srv/apps/$REPO_NAME"
             BRANCH="${{ github.ref_name }}"
-            
+
             # Create app directory if it doesn't exist
             mkdir -p "$APP_DIR"
             cd "$APP_DIR"
@@ -40,7 +40,7 @@ jobs:
               git checkout "$BRANCH" && git reset --hard "origin/$BRANCH"
               git pull origin "$BRANCH"
             fi
-            
+
             # Map branch to compose file
             if [ "$BRANCH" = "main" ]; then
               COMPOSE_FILE="docker-compose.dev.yml"
@@ -54,7 +54,7 @@ jobs:
             docker-compose -f "$COMPOSE_FILE" up --build -d
 
             echo "===== Deployment completed successfully ====="
-      
+
       - name: Notify deployment status
         if: always()
         run: |
