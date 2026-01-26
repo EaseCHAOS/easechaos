@@ -46,6 +46,13 @@ The application currently features:
 - Redis
 - Docker
 
+## Documentation
+
+For detailed documentation, see the [docs/](./docs) folder:
+
+- **[Data Extraction Documentation](./docs/data-extraction.md)** - Excel format requirements
+
+
 
 ### Installation (Local without Docker)
 1. Clone the repository

@@ -41,6 +41,9 @@ export default function LandingPage() {
     }
   };
 
+  const selectClass =
+    "w-full appearance-none rounded-md border bg-[#F4F4F5] dark:bg-[#262626] px-4 py-3 text-sm text-gray-900 dark:text-[#D4D4D8] border-gray-300 dark:border-[#303030] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none";
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto overflow-hidden relative">
       <div className="absolute top-0 w-full h-[60vh] dark:h-[70vh] bg-[url('../assets/light_pattern.svg')] dark:bg-[url('../assets/dark_pattern.svg')] bg-cover bg-center dark:opacity-15 opacity-65" />
@@ -55,21 +58,21 @@ export default function LandingPage() {
             width="16px"
             height="16px"
             viewBox="0 0 24 24"
-            stroke-width="1.5"
+            strokeWidth="1.5"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className="relative size-5"
           >
             <path
               d="M8 15C12.8747 15 15 12.949 15 8C15 12.949 17.1104 15 22 15C17.1104 15 15 17.1104 15 22C15 17.1104 12.8747 15 8 15Z"
-              stroke-width="1.5"
-              stroke-linejoin="round"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
               className="stroke-green-700"
             ></path>
             <path
               d="M2 6.5C5.13376 6.5 6.5 5.18153 6.5 2C6.5 5.18153 7.85669 6.5 11 6.5C7.85669 6.5 6.5 7.85669 6.5 11C6.5 7.85669 5.13376 6.5 2 6.5Z"
-              stroke-width="1.5"
-              stroke-linejoin="round"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
               className="stroke-green-700"
             ></path>
           </svg>
@@ -82,7 +85,7 @@ export default function LandingPage() {
         {/* Hero Section */}
         <div className="space-y-6 text-center">
           <div className="flex justify-end px-4">
-            <ThemeToggle />
+            <ThemeToggle props="" />
           </div>
 
           <a
@@ -136,35 +139,69 @@ export default function LandingPage() {
         <div className="relative w-full">
           <div className="relative z-10 shadow-sm bg-white dark:bg-[#09090B] border border-[#E4E4E7] dark:border-[#303030] rounded-lg p-4 space-y-4 max-w-sm mx-auto">
             <div className="space-y-4">
-              <select
-                value={selectedDept}
-                onChange={(e) => setSelectedDept(e.target.value as Department)}
-                className="w-full bg-[#F4F4F5] dark:bg-[#262626] p-3 border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#D4D4D8]"
-              >
-                <option value="">Select Department</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name}
+              <div className="relative group">
+                <select
+                  value={selectedDept}
+                  onChange={(e) =>
+                    setSelectedDept(e.target.value as Department)
+                  }
+                  className={selectClass}
+                >
+                  <option value="" disabled>
+                    Select Department
                   </option>
-                ))}
-              </select>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
 
-              <select
-                value={selectedYear ? selectedYear.name : ""}
-                onChange={(e) =>
-                  setSelectedYear(
-                    years.find((y) => y.name === e.target.value) || "",
-                  )
-                }
-                className="w-full p-3 bg-[#F4F4F5] dark:bg-[#303030] border border-gray-300 dark:border-[#303030] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-[#D4D4D8]"
-              >
-                <option value="">Select Year</option>
-                {years.map((year) => (
-                  <option key={year.id} value={year.name}>
-                    {year.name}
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 group-focus-within:text-blue-500">
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="-6.5 0 32 32"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M18.813 11.406l-7.906 9.906c-0.75 0.906-1.906 0.906-2.625 0l-7.906-9.906c-0.75-0.938-0.375-1.656 0.781-1.656h16.875c1.188 0 1.531 0.719 0.781 1.656z" />
+                  </svg>
+                </span>
+              </div>
+
+              <div className="relative group">
+                <select
+                  value={selectedYear ? selectedYear.name : ""}
+                  onChange={(e) =>
+                    setSelectedYear(
+                      years.find((y) => y.name === e.target.value) || "",
+                    )
+                  }
+                  className={selectClass}
+                >
+                  <option value="" disabled>
+                    Select Year
                   </option>
-                ))}
-              </select>
+                  {years.map((year) => (
+                    <option key={year.id} value={year.name}>
+                      {year.name}
+                    </option>
+                  ))}
+                </select>
+
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 group-focus-within:text-blue-500">
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="-6.5 0 32 32"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M18.813 11.406l-7.906 9.906c-0.75 0.906-1.906 0.906-2.625 0l-7.906-9.906c-0.75-0.938-0.375-1.656 0.781-1.656h16.875c1.188 0 1.531 0.719 0.781 1.656z" />
+                  </svg>
+                </span>
+              </div>
             </div>
 
             <button
@@ -294,8 +331,8 @@ export default function LandingPage() {
             <path
               d="M9.96424 2.68571C10.0668 2.42931 9.94209 2.13833 9.6857 2.03577C9.4293 1.93322 9.13832 2.05792 9.03576 2.31432L5.03576 12.3143C4.9332 12.5707 5.05791 12.8617 5.3143 12.9642C5.5707 13.0668 5.86168 12.9421 5.96424 12.6857L9.96424 2.68571ZM3.85355 5.14646C4.04882 5.34172 4.04882 5.6583 3.85355 5.85356L2.20711 7.50001L3.85355 9.14646C4.04882 9.34172 4.04882 9.6583 3.85355 9.85356C3.65829 10.0488 3.34171 10.0488 3.14645 9.85356L1.14645 7.85356C0.951184 7.6583 0.951184 7.34172 1.14645 7.14646L3.14645 5.14646C3.34171 4.9512 3.65829 4.9512 3.85355 5.14646ZM11.1464 5.14646C11.3417 4.9512 11.6583 4.9512 11.8536 5.14646L13.8536 7.14646C14.0488 7.34172 14.0488 7.6583 13.8536 7.85356L11.8536 9.85356C11.6583 10.0488 11.3417 10.0488 11.1464 9.85356C10.9512 9.6583 10.9512 9.34172 11.1464 9.14646L12.7929 7.50001L11.1464 5.85356C10.9512 5.6583 10.9512 5.34172 11.1464 5.14646Z"
               fill="currentColor"
-              fill-rule="evenodd"
-              clip-rule="evenodd"
+              fillRule="evenodd"
+              clipRule="evenodd"
             ></path>
           </svg>
           <p className="text-xs sm:text-sm dark:text-[#F0F6FC]">

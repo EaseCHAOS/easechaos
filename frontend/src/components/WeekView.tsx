@@ -48,6 +48,7 @@ function splitEventValue(value: string): string[] {
 
 export default function WeekView({ schedule }: WeekViewProps) {
   const [currentTime, setCurrentTime] = React.useState(new Date());
+  const { theme } = useTheme();
 
   React.useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -59,19 +60,17 @@ export default function WeekView({ schedule }: WeekViewProps) {
     const minutes = currentTime.getMinutes();
 
     // Hide indicator if outside 7am-8pm
-    if (hours < 7 || hours > 20) {
+    if (hours < 7 || hours >= 20) {
       return null;
     }
 
-    const columnWidth = 100 / 24;
+    const columnWidth = 92 / 24;
     const hoursSince7am = hours - 7;
     const totalMinutesSince7am = hoursSince7am * 60 + minutes;
     const columnPosition = totalMinutesSince7am / 30;
 
     return columnPosition * columnWidth;
   }, [currentTime]);
-
-  console.log(currentTimePosition);
 
   const courseColorMap = useMemo(() => {
     const map = new Map();
@@ -83,7 +82,6 @@ export default function WeekView({ schedule }: WeekViewProps) {
   }, []);
 
   const getCourseColor = (value: string) => {
-    const { theme } = useTheme();
     const match = value.match(/\b\d{3}\b/);
     if (!match) return DEFAULT_COLOR;
 

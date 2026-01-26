@@ -46,43 +46,13 @@ const courseColorMap = new Map(
   ]),
 );
 
-const getCourseColor = (value: string) => {
-  const { theme } = useTheme();
-  const match = value.match(/\b\d{3}\b/);
-  if (!match) return DEFAULT_COLOR;
-
-  const colorScheme =
-    courseColorMap.get(match[0] as (typeof COURSE_CODES)[number]) ||
-    DEFAULT_COLOR;
-
-  const isSystemTheme = theme === "system";
-  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-
-  const currentTheme = isSystemTheme ? systemTheme : theme;
-
-  if (currentTheme === "dark") {
-    return {
-      bg: colorScheme.darkBg,
-      border: colorScheme.darkBorder,
-      text: colorScheme.darkText,
-    };
-  }
-
-  return {
-    bg: colorScheme.bg,
-    border: colorScheme.border,
-    text: colorScheme.text,
-  };
-};
-
 function splitEventValue(value: string): string[] {
   return value.split("\n").filter(Boolean);
 }
 
 export default function DayView({ schedule }: DayViewProps) {
   const [currentTime, setCurrentTime] = React.useState(new Date());
+  const { theme } = useTheme();
 
   React.useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -100,6 +70,37 @@ export default function DayView({ schedule }: DayViewProps) {
 
     return ((timeInHours - 7) / 13) * 100;
   }, [currentTime]);
+
+  const getCourseColor = (value: string) => {
+    const match = value.match(/\b\d{3}\b/);
+    if (!match) return DEFAULT_COLOR;
+
+    const colorScheme =
+      courseColorMap.get(match[0] as (typeof COURSE_CODES)[number]) ||
+      DEFAULT_COLOR;
+
+    const isSystemTheme = theme === "system";
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+      .matches
+      ? "dark"
+      : "light";
+
+    const currentTheme = isSystemTheme ? systemTheme : theme;
+
+    if (currentTheme === "dark") {
+      return {
+        bg: colorScheme.darkBg,
+        border: colorScheme.darkBorder,
+        text: colorScheme.darkText,
+      };
+    }
+
+    return {
+      bg: colorScheme.bg,
+      border: colorScheme.border,
+      text: colorScheme.text,
+    };
+  };
 
   if (!schedule) {
     return (
