@@ -22,7 +22,8 @@ function AppContent() {
   }, [location]);
 
   const lastPath = shouldRedirect ? localStorage.getItem("lastPath") : null;
-  const isValidTimetablePath = lastPath?.startsWith("/timetable/");
+  const isValidSavedPath =
+    lastPath?.startsWith("/timetable/") || lastPath?.startsWith("/exam/");
 
   useEffect(() => {
     setShouldRedirect(false);
@@ -33,7 +34,7 @@ function AppContent() {
       <Route
         path="/"
         element={
-          isValidTimetablePath ? (
+          isValidSavedPath ? (
             <Navigate to={lastPath!} replace />
           ) : (
             <LandingPage />

@@ -1,50 +1,58 @@
 import pandas as pd
 
+PERIOD_MAPPING = {
+    "M": ("7:00 AM", "10:00 AM"),
+    "A": ("11:00 AM", "2:00 PM"),
+    "E": ("3:00 PM", "6:00 PM"),
+}
 
-def _normalize_exam_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Normalize exam workbook columns across draft variants."""
-    normalized = df.copy()
-    normalized.columns = [str(col).strip() for col in normalized.columns]
+COLUMN_ALIASES = {
+    "COURSE NO": ["COURSE NO", "CRS CODE"],
+    "COURSE NAME": ["COURSE NAME", "COURSE TITLE"],
+    "CLASS": ["CLASS"],
+    "LECTURER": ["LECTURER", "EXAMINER"],
+    "LECTURE HALL": ["LECTURE HALL", "ROOM"],
+    "INVIGILATOR (UPDATED)": ["INVIGILATOR (UPDATED)", "INVIGILATOR"],
+    "PERIOD": ["PERIOD", "SESSION"],
+    "NO": ["NO", "No."],
+}
 
-    session_col = "PERIOD" if "PERIOD" in normalized.columns else "SESSION"
-    course_col = (
-        "COURSE NAME" if "COURSE NAME" in normalized.columns else "COURSE TITLE"
-    )
-    hall_col = "LECTURE HALL" if "LECTURE HALL" in normalized.columns else "ROOM"
-    invigilator_col = (
-        "INVIGILATOR (UPDATED)"
-        if "INVIGILATOR (UPDATED)" in normalized.columns
-        else "INVIGILATOR"
-    )
-    number_col = "NO" if "NO" in normalized.columns else "No."
 
-    rename_map = {
-        session_col: "PERIOD",
-        course_col: "COURSE NAME",
-        hall_col: "LECTURE HALL",
-        invigilator_col: "INVIGILATOR (UPDATED)",
-        number_col: "NO",
-    }
+def _find_header_row(df: pd.DataFrame) -> int:
+    for index in range(len(df)):
+        row = [str(value).strip() for value in df.iloc[index].tolist()]
+        if "DATE" in row and ("CLASS" in row or "SESSION" in row or "PERIOD" in row):
+            return index
 
-    return normalized.rename(columns=rename_map)
+    raise ValueError("Could not find exam timetable header row")
+
+
+def _resolve_column_name(columns: pd.Index, candidates: list[str]) -> str | None:
+    for candidate in candidates:
+        if candidate in columns:
+            return candidate
+    return None
+
+
+def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    renamed_columns: dict[str, str] = {}
+
+    for canonical_name, aliases in COLUMN_ALIASES.items():
+        source_name = _resolve_column_name(df.columns, aliases)
+        if source_name:
+            renamed_columns[source_name] = canonical_name
+
+    return df.rename(columns=renamed_columns)
 
 
 def _convert_exam_dates(date_series: pd.Series) -> pd.Series:
-    """Normalize exam date values to a datetime-like Series.
-
-    Accepts a Series containing either Excel serial date numbers or already
-    parsed datetime-like values and returns a Series of pandas datetime
-    objects. String formatting for display is performed separately (e.g. in
-    ``format_date_with_suffix``).
-    """
+    """Normalize Excel serial dates and datetime-like values."""
     numeric_dates = pd.to_numeric(date_series, errors="coerce")
 
     if numeric_dates.notna().all():
-        converted = pd.to_datetime(numeric_dates, unit="D", origin="1899-12-30")
-    else:
-        converted = pd.to_datetime(date_series, errors="coerce")
+        return pd.to_datetime(numeric_dates, unit="D", origin="1899-12-30")
 
-    return converted
+    return pd.to_datetime(date_series, errors="coerce")
 
 
 def get_exam_timetable(filename, class_pattern) -> pd.DataFrame:
@@ -58,61 +66,46 @@ def get_exam_timetable(filename, class_pattern) -> pd.DataFrame:
     Returns:
     pd.DataFrame: Processed and filtered timetable DataFrame
     """
+    raw_df = pd.read_excel(filename, sheet_name=0, header=None)
 
-    # read the Excel file
-    df = pd.read_excel(filename, sheet_name=0, header=None)
-
-    # Remove empty columns and locate the header row dynamically.
+    header_row = _find_header_row(raw_df)
+    df = raw_df.iloc[header_row:].reset_index(drop=True)
+    df.columns = [str(value).strip() for value in df.iloc[0].tolist()]
+    df = df[1:].reset_index(drop=True)
+    df = _normalize_columns(df)
     df = df.dropna(axis=1, how="all")
-    header_row_index = None
-    for idx, row in df.iterrows():
-        values = {str(value).strip() for value in row.dropna().tolist()}
-        if "DATE" in values and ("PERIOD" in values or "SESSION" in values):
-            header_row_index = idx
-            break
 
-    if header_row_index is None:
-        raise ValueError("Could not locate exam timetable header row")
+    period_col = _resolve_column_name(df.columns, ["PERIOD"])
+    if not period_col:
+        raise ValueError("Exam timetable is missing PERIOD/SESSION column")
 
-    df_cleaned = df.iloc[header_row_index:].reset_index(drop=True)
-    df_cleaned.columns = df_cleaned.iloc[0]
-    df_cleaned = df_cleaned[1:].reset_index(drop=True)
-    df_cleaned = _normalize_exam_columns(df_cleaned)
+    df[period_col] = df[period_col].astype(str).str.strip()
+    df = df[df[period_col].isin(PERIOD_MAPPING.keys())]
 
-    # map PERIOD to START and END times
-    period_mapping = {
-        "M": ("7:00 AM", "10:00 AM"),
-        "A": ("11:00 AM", "2:00 PM"),
-        "E": ("3:00 PM", "6:00 PM"),
-    }
+    if df.empty:
+        # No valid PERIOD/SESSION rows; propagate an empty result without raising.
+        df["START"] = pd.Series(dtype=object)
+        df["END"] = pd.Series(dtype=object)
+    else:
+        df["START"], df["END"] = zip(*df[period_col].map(PERIOD_MAPPING))
+    df = df.drop(columns=[period_col])
 
-    # conver the 'PERIOD' column to string type to handle NaN vals
-    df_cleaned["PERIOD"] = df_cleaned["PERIOD"].astype(str)
-    df_cleaned = df_cleaned[df_cleaned["PERIOD"].isin(period_mapping.keys())]
-
-    # apply the mapping for valid periods
-    df_cleaned["START"], df_cleaned["END"] = zip(
-        *df_cleaned["PERIOD"].map(period_mapping)
-    )
-
-    # remove the PERIOD column
-    df_cleaned = df_cleaned.drop(columns=["PERIOD"])
-
-    # format date helper function
     def format_date_with_suffix(date):
         day = date.day
         suffix = (
-            "th" if 11 <= day <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+            "th"
+            if 11 <= day <= 13
+            else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
         )
         return date.strftime(f"%A, {day}{suffix} %B %Y")
 
-    # process dates
-    df_cleaned["DATE"] = _convert_exam_dates(df_cleaned["DATE"])
-    df_cleaned = df_cleaned[df_cleaned["DATE"].notna()]
-    df_cleaned["DATE"] = df_cleaned["DATE"].apply(format_date_with_suffix)
+    df["DATE"] = _convert_exam_dates(df["DATE"])
+    df = df[df["DATE"].notna()].copy()
+    df["DATE"] = df["DATE"].apply(format_date_with_suffix)
 
-    # filter by class pattern
-    filtered_df = df_cleaned[df_cleaned["CLASS"].str.startswith(class_pattern)]
-    filtered_df = filtered_df.drop(columns=["NO"], errors="ignore")
+    filtered_df = df[df["CLASS"].astype(str).str.startswith(class_pattern)].copy()
+
+    if "NO" in filtered_df.columns:
+        filtered_df = filtered_df.drop(columns=["NO"])
 
     return filtered_df

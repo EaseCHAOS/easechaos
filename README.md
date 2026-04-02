@@ -12,17 +12,19 @@ easeCHAOS is a modern, user-friendly timetable viewer designed specifically for 
 - **Simplified View**: No more squinting at Excel sheets or searching through merged cells
 - **Class-Specific**: View only your class's schedule, filtered and clean
 - **Modern Interface**: Intuitive weekly and daily views
+- **Exam Schedule Support**: Browse the exam period as a month view, agenda, or short-term windows
 - **Mobile Friendly**: Access your schedule on any device
-- **Download Options**: Download your schedule in pdf and image.
+- **Download Options**: Download schedules as PDF, image, or calendar (`.ics`) files.
 
 ## Current Progress
 
 The application currently features:
 - ✅ Weekly view with all classes
 - ✅ Daily detailed view
-- ✅ Class filtering system
+- ✅ Exam schedule views for `All Exams`, `Today`, `This Week`, and `Next Week`
+- ✅ Exam month calendar and agenda view
 - ✅ Responsive design with Light and Dark Theme
-- ✅ Calendar download (PDF & Image)
+- ✅ Lecture and exam export downloads (PDF, Image, and `.ics` for exam agenda)
 - ✅ Accessible as Progressive Web App (PWA). You can basically save for offline use once your schedule is loaded up
 
 ## Getting Started
@@ -52,23 +54,35 @@ For detailed documentation, see the [docs/](./docs) folder:
 
 - **[Data Extraction Documentation](./docs/data-extraction.md)** - Excel format requirements
 
-
-
 ### Installation (Local without Docker)
 1. Clone the repository
 2. Ensure you have `make` installed (available on most linux flavored systems)
 3. Copy and rename `.env.sample` to `.env`
-4. Run `make local` to start the application on local. However, before that, note that you would need a `redis` instance. You could create one on [upstash.com](https://upstash.com/) and just place the details in the `.env` file.
-
+4. Ensure you have a Redis instance available and set the connection values in `.env`
+5. Run `make local`
 
 ### Installation (Docker)
 
 1. Clone the repository
 2. Copy and rename `.env.sample` to `.env`
-3. Run `make up` to start the application on docker.
-4. Open `http://localhost:5173` for the frontend and `http://localhost:8000/api/v1/healthcheck` to confirm the API is running.
+3. Run `make up` or `docker compose -f docker-compose.dev.yml up`
+4. Open the app at `http://localhost:5173`
+5. API healthcheck is available at `http://localhost:8000/api/v1/healthcheck`
+
+To stop the Docker stack:
+
+```bash
+make down
+```
+
+## Notes About Source Data
 
 NB: This project is still under development. You might encounter bugs with the processed data. However, issues stem from the drafts, and has nothing to do with the extractor in most cases. Refer to the IT department and respective class reps to resolve clashes and unfamiliar conventions.
+
+- Lecture and exam accuracy still depends on the source spreadsheets.
+- If a class appears in the lecture timetable but not in the exam timetable, check the exam workbook first.
+- Exam rows may be repeated once per class group in the source file. The frontend groups those rows into a single paper for display.
+- `All Exams` → `Agenda` supports export as `PDF`, `PNG`, and `.ics` for importing exam papers into calendar apps.
 
 ### Current Progress
 
