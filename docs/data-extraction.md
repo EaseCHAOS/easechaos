@@ -64,8 +64,8 @@ The extraction system supports various class naming patterns:
 ├────────────┬──────────┬──────────────────────┬────────┬─────┬──────────────┤
 │ DATE       │ CRS CODE │ COURSE TITLE         │ CLASS  │ No. │ ROOM         │
 ├────────────┼──────────┼──────────────────────┼────────┼─────┼──────────────┤
-│ 07/04/2026 │ EC 251   │ GENERAL PYSCHOLOGY   │ EC 2A  │ 50  │ CCG2         │
-│ 07/04/2026 │ LT 251   │ GENERAL PYSCHOLOGY   │ LT 2B  │ 50  │ LH 6         │
+│ 07/04/2026 │ EC 251   │ GENERAL PSYCHOLOGY   │ EC 2A  │ 50  │ CCG2         │
+│ 07/04/2026 │ LT 251   │ GENERAL PSYCHOLOGY   │ LT 2B  │ 50  │ LH 6         │
 └────────────┴──────────┴──────────────────────┴────────┴─────┴──────────────┘
 ```
 
