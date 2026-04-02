@@ -1,67 +1,218 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  html {
-    -webkit-text-size-adjust: 100%;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  }
-  
-  body {
-    @apply bg-[#FAFAFA] dark:bg-[#02040A];
-    min-height: 100vh;
-    /* Extend the background color beyond the viewport */
-    min-height: -webkit-fill-available;
-  }
-  
-  /* Force font weights on iOS */
-  strong, b, h1, h2, h3, h4, h5, h6, 
-  .font-bold, .font-semibold, .font-medium {
-    -webkit-font-smoothing: auto;
-  }
+    html {
+        -webkit-text-size-adjust: 100%;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-family:
+            "Inter",
+            -apple-system,
+            BlinkMacSystemFont,
+            system-ui,
+            sans-serif;
+    }
+
+    body {
+        @apply bg-[#FAFAFA] dark:bg-[#02040A];
+        min-height: 100vh;
+        /* Extend the background color beyond the viewport */
+        min-height: -webkit-fill-available;
+    }
+
+    /* Force font weights on iOS */
+    strong,
+    b,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .font-bold,
+    .font-semibold,
+    .font-medium {
+        -webkit-font-smoothing: auto;
+    }
 }
 
 .rdp {
-  --rdp-cell-size: 40px;
-  --rdp-accent-color: #3b82f6;
-  --rdp-background-color: #e5e7eb;
-  margin: 0;
+    --rdp-cell-size: 40px;
+    --rdp-accent-color: #3b82f6;
+    --rdp-background-color: #e5e7eb;
+    margin: 0;
 }
 
 .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
-  background-color: #f3f4f6;
+    background-color: #f3f4f6;
+}
+
+.exam-calendar {
+    --rdp-cell-size: 39px;
+    --rdp-accent-color: #111827;
+    --rdp-background-color: #f4f4f5;
+    width: 100%;
+}
+
+.dark .exam-calendar {
+    --rdp-accent-color: #f0f6fc;
+    --rdp-background-color: #182131;
+}
+
+.exam-calendar .rdp-months,
+.exam-calendar .rdp-month {
+    width: 100%;
+}
+
+.exam-calendar .rdp-table {
+    width: 100%;
+    max-width: none;
+}
+
+.exam-calendar .rdp-head_cell {
+    color: #6d7480;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dark .exam-calendar .rdp-head_cell {
+    color: #8f9caf;
+}
+
+.exam-calendar .rdp-button {
+    border-radius: 0.5rem;
+}
+
+.exam-calendar-day {
+    display: flex;
+    min-height: 2.2rem;
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 0.22rem 0.25rem;
+}
+
+.exam-calendar-day-number {
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.exam-calendar-day-count {
+    align-self: flex-end;
+    border-radius: 999px;
+    background: #e4e4e7;
+    color: #27272a;
+    font-size: 0.64rem;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 1rem;
+    padding: 0.12rem 0.24rem;
+    text-align: center;
+}
+
+.dark .exam-calendar-day-count {
+    background: #223047;
+    color: #f0f6fc;
+}
+
+.exam-calendar .rdp-day_hasExam:not(.rdp-day_selected) .exam-calendar-day {
+    background: #f4f4f5;
+    color: #111827;
+}
+
+.dark
+    .exam-calendar
+    .rdp-day_hasExam:not(.rdp-day_selected)
+    .exam-calendar-day {
+    background: #182131;
+    color: #f0f6fc;
+}
+
+.exam-calendar .rdp-day_today:not(.rdp-day_selected) .exam-calendar-day {
+    box-shadow: inset 0 0 0 1px #cbd5e1;
+}
+
+.dark .exam-calendar .rdp-day_today:not(.rdp-day_selected) .exam-calendar-day {
+    box-shadow: inset 0 0 0 1px #36507a;
+}
+
+.exam-calendar .rdp-day_selected .exam-calendar-day {
+    background: #111827;
+    color: #fafafa;
+}
+
+.dark .exam-calendar .rdp-day_selected .exam-calendar-day {
+    background: #223047;
+    color: #f0f6fc;
+}
+
+.exam-calendar .rdp-day_selected .exam-calendar-day-count {
+    background: rgba(255, 255, 255, 0.18);
+    color: inherit;
+}
+
+.dark .exam-calendar .rdp-day_selected .exam-calendar-day-count {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+@media (min-width: 640px) {
+    .exam-calendar {
+        --rdp-cell-size: 48px;
+    }
+
+    .exam-calendar .rdp-head_cell {
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+    }
+
+    .exam-calendar-day {
+        min-height: 2.5rem;
+        padding: 0.35rem 0.4rem;
+    }
+
+    .exam-calendar-day-number {
+        font-size: 0.92rem;
+    }
+
+    .exam-calendar-day-count {
+        font-size: 0.7rem;
+        min-width: 1.2rem;
+        padding: 0.18rem 0.34rem;
+    }
 }
 
 .animate-slide-in {
-  animation: slideIn 0.5s forwards;
+    animation: slideIn 0.5s forwards;
 }
 
 @keyframes slideIn {
-  from {
-      transform: translateY(-20px);
-      opacity: 0;
-  }
-  to {
-      transform: translateY(0);
-      opacity: 1;
-  }
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
-
 .animate-fade-out {
-  animation: fadeOut 0.5s forwards;
+    animation: fadeOut 0.5s forwards;
 }
 
 @keyframes fadeOut {
-  from {
-      opacity: 1;
-  }
-  to {
-      opacity: 0;
-  }
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
 }

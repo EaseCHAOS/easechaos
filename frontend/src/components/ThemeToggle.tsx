@@ -3,7 +3,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
 
-export default function ThemeToggle({ props }: { props: string }) {
+export default function ThemeToggle({ props = "right-0" }: { props?: string }) {
   const { theme, setTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -32,29 +32,32 @@ export default function ThemeToggle({ props }: { props: string }) {
     <div className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
+        aria-label="Change theme"
         className={clsx(
-          "p-2 rounded-lg",
-          "hover:bg-gray-100 dark:hover:bg-[#303030]",
+          "flex h-10 w-10 items-center justify-center rounded-md border",
+          "border-gray-200 bg-white text-[#3F4652] hover:bg-gray-100",
+          "dark:border-[#2A313C] dark:bg-[#11161D] dark:text-[#C6D0DE] dark:hover:bg-[#182131]",
           "transition-colors",
-          "border border-gray-200 dark:border-[#303030]",
-          "relative flex items-center",
         )}
       >
         {theme === "dark" ? (
-          <Moon className="w-5 h-5 dark:text-[#B2B2B2]" />
+          <Moon className="h-4.5 w-4.5" />
         ) : theme === "light" ? (
-          <Sun className="w-5 h-5" />
+          <Sun className="h-4.5 w-4.5" />
         ) : (
-          <Monitor className="w-5 h-5 dark:text-[#B2B2B2]" />
+          <Monitor className="h-4.5 w-4.5" />
         )}
       </button>
 
       {showDropdown && (
         <div
           ref={dropdownRef}
-          className={`absolute top-full ${props} mt-1 z-[9999]`}
+          className={clsx(
+            "absolute top-full mt-1 z-[9999] origin-top-right",
+            props,
+          )}
         >
-          <div className="w-48 rounded-md shadow-lg bg-white dark:bg-[#262626] ring-1 ring-black ring-opacity-5">
+          <div className="w-44 rounded-md border border-[#E4E4E7] bg-white shadow-lg dark:border-[#2A313C] dark:bg-[#11161D]">
             {themeOptions.map(({ value, icon: Icon, label }) => (
               <button
                 key={value}
@@ -63,13 +66,14 @@ export default function ThemeToggle({ props }: { props: string }) {
                   setShowDropdown(false);
                 }}
                 className={clsx(
-                  "w-full px-4 py-2 text-left flex items-center space-x-2",
-                  "hover:bg-gray-100 dark:hover:bg-[#303030]",
-                  theme === value && "bg-gray-100 dark:bg-[#303030]",
+                  "flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[#3F4652] hover:bg-gray-100",
+                  "dark:text-[#C6D0DE] dark:hover:bg-[#182131]",
+                  theme === value &&
+                    "bg-gray-100 text-[#111827] dark:bg-[#182131] dark:text-[#F0F6FC]",
                 )}
               >
-                <Icon className="w-4 h-4 dark:text-[#B2B2B2]" />
-                <span className="text-sm dark:text-[#B2B2B2]">{label}</span>
+                <Icon className="h-4 w-4" />
+                <span>{label}</span>
               </button>
             ))}
           </div>

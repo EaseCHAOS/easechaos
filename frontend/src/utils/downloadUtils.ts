@@ -1,6 +1,14 @@
 import { toPng } from "html-to-image";
 import html2pdf from "html2pdf.js";
 
+interface CalendarExportEvent {
+  start: Date;
+  end: Date;
+  summary: string;
+  description?: string;
+  location?: string;
+}
+
 const QUALITY = {
   mobile: {
     pixelRatio: 1.5,
@@ -22,9 +30,8 @@ async function prepareElement(elementId: string) {
   const node = document.getElementById(elementId);
   if (!node) throw new Error("Element not found");
 
-  // Detect theme by checking if body has dark-theme class
-  const isDarkTheme = document.body.classList.contains("dark-theme");
-  const backgroundColor = isDarkTheme ? "#121212" : "white"; // Using a dark gray for dark mode
+  const isDarkTheme = document.documentElement.classList.contains("dark");
+  const backgroundColor = isDarkTheme ? "#02040A" : "#FAFAFA";
 
   // Hide time indicator if exists
   const timeIndicator = node.querySelector(".time-indicator") as HTMLElement;
@@ -48,6 +55,47 @@ async function prepareElement(elementId: string) {
   return { dataUrl, backgroundColor }; // Return both for PDF generation
 }
 
+function downloadBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.download = fileName;
+  link.href = url;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function escapeIcsText(value: string) {
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
+}
+
+function formatIcsDateTime(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+}
+
+function formatUtcIcsTimestamp(date: Date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+
+  return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
+}
+
 export async function downloadElementAsImage(
   elementId: string,
   fileName: string
@@ -64,6 +112,57 @@ export async function downloadElementAsImage(
   } catch (error) {
     console.error("Failed to download image:", error);
     alert("Failed to download image. Please try again.");
+  }
+}
+
+export function downloadEventsAsICS(
+  events: CalendarExportEvent[],
+  fileName: string,
+  calendarName = "EaseCHAOS Exam Schedule"
+) {
+  try {
+    const dtStamp = formatUtcIcsTimestamp(new Date());
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//EaseCHAOS//Exam Schedule//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      `X-WR-CALNAME:${escapeIcsText(calendarName)}`,
+    ];
+
+    events.forEach((event, index) => {
+      lines.push(
+        "BEGIN:VEVENT",
+        `UID:${formatIcsDateTime(event.start)}-${index}@easechaos.app`,
+        `DTSTAMP:${dtStamp}`,
+        `DTSTART:${formatIcsDateTime(event.start)}`,
+        `DTEND:${formatIcsDateTime(event.end)}`,
+        `SUMMARY:${escapeIcsText(event.summary)}`,
+      );
+
+      if (event.location) {
+        lines.push(`LOCATION:${escapeIcsText(event.location)}`);
+      }
+
+      if (event.description) {
+        lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
+      }
+
+      lines.push("END:VEVENT");
+    });
+
+    lines.push("END:VCALENDAR");
+
+    downloadBlob(
+      new Blob([lines.join("\r\n")], {
+        type: "text/calendar;charset=utf-8",
+      }),
+      fileName
+    );
+  } catch (error) {
+    console.error("Failed to download ICS:", error);
+    alert("Failed to download calendar file. Please try again.");
   }
 }
 
