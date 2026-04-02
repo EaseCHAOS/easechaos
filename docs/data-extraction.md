@@ -58,23 +58,38 @@ The extraction system supports various class naming patterns:
 ## Exam Timetable Format
 
 ### Excel Structure
-```
-┌─────────────────────────────────────────────────────────┐
-│ Single sheet with exam schedule                         │
-├─────────┬─────────┬─────────┬─────────┬─────────────────┤
-│ NO      │ DATE    │ CLASS   │ COURSE  │ LECTURE HALL    │
-├─────────┼─────────┼─────────┼─────────┼─────────────────┤
-│ 1       │ 15/01/24│ CE 4    │ MATH 301│ LT 1            │
-│ 2       │ 16/01/24│ MECH 3  │ PHYS 201│ Lab 2           │
-└─────────┴─────────┴─────────┴─────────┴─────────────────┘
+``` 
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Single sheet with exam schedule                                            │
+├────────────┬──────────┬──────────────────────┬────────┬─────┬──────────────┤
+│ DATE       │ CRS CODE │ COURSE TITLE         │ CLASS  │ No. │ ROOM         │
+├────────────┼──────────┼──────────────────────┼────────┼─────┼──────────────┤
+│ 07/04/2026 │ EC 251   │ GENERAL PYSCHOLOGY   │ EC 2A  │ 50  │ CCG2         │
+│ 07/04/2026 │ LT 251   │ GENERAL PYSCHOLOGY   │ LT 2B  │ 50  │ LH 6         │
+└────────────┴──────────┴──────────────────────┴────────┴─────┴──────────────┘
 ```
 
 ### Key Requirements
 
-1. **Header Row**: Column names in row 4 (after skipping first 3 rows)
-2. **Period Column**: Uses codes M (Morning), A (Afternoon), E (Evening)
-3. **Date Format**: Excel date format (DD/MM/YYYY or similar)
-4. **Class Column**: Course codes for filtering
+1. **Single Sheet**: Exam timetable is stored on one sheet
+2. **Header Detection**: The extractor searches for a row containing `DATE`, `CLASS`, and either `PERIOD` or `SESSION`
+3. **Session Codes**: Uses `M`, `A`, `E` for morning, afternoon, and evening
+4. **Date Format**: Excel date values are converted to readable strings with suffixes
+5. **Class Prefix**: Class rows are filtered with `str.startswith(class_pattern)`
+
+### Supported Exam Column Names
+
+The extractor supports both older and newer workbook variants by normalizing columns internally.
+
+| Normalized Output | Accepted Source Columns |
+|-------------------|-------------------------|
+| `COURSE NO` | `COURSE NO`, `CRS CODE` |
+| `COURSE NAME` | `COURSE NAME`, `COURSE TITLE` |
+| `LECTURER` | `LECTURER`, `EXAMINER` |
+| `LECTURE HALL` | `LECTURE HALL`, `ROOM` |
+| `INVIGILATOR (UPDATED)` | `INVIGILATOR (UPDATED)`, `INVIGILATOR` |
+| `PERIOD` | `PERIOD`, `SESSION` |
+| `NO` | `NO`, `No.` |
 
 ### Period Mapping
 
@@ -88,10 +103,11 @@ period_mapping = {
 
 ### Processing Logic
 
-1. **Header Detection**: Skips first 3 rows, uses 4th row as headers
-2. **Period Conversion**: Maps period codes to time ranges
-3. **Date Formatting**: Converts Excel dates to readable format with suffixes
-4. **Class Filtering**: Filters by class pattern using `str.startswith()`
+1. **Header Detection**: Finds the real header row dynamically
+2. **Column Normalization**: Maps old and new column names into one schema
+3. **Period Conversion**: Maps period or session codes to time ranges
+4. **Date Formatting**: Converts Excel dates to readable format with suffixes
+5. **Class Filtering**: Filters by class pattern using `str.startswith()`
 
 ## Data Extraction Functions
 
@@ -131,10 +147,12 @@ period_mapping = {
 #### `get_exam_timetable(filename, class_pattern)`
 - **Purpose**: Extract exam schedule from Excel file
 - **Process**:
-  1. Reads Excel with specific header positioning
-  2. Maps period codes to time ranges
-  3. Formats dates with readable suffixes
-  4. Filters by class pattern
+  1. Reads the raw sheet without fixed headers
+  2. Detects the actual header row
+  3. Normalizes workbook column names
+  4. Maps period or session codes to time ranges
+  5. Formats dates with readable suffixes
+  6. Filters by class pattern
 - **Returns**: Filtered exam timetable DataFrame
 
 ## Time Format Handling
@@ -191,10 +209,10 @@ period_mapping = {
 
 ### Sample Exam Timetable Entry
 ```excel
-| NO | DATE       | CLASS | COURSE NAME | LECTURE HALL | PERIOD |
-|----|------------|-------|-------------|--------------|--------|
-| 1  | 15/01/2024 | CE 4  | MATH 301    | LT 1         | M      |
-| 2  | 16/01/2024 | MECH 3| PHYS 201    | Lab 2        | A      |
+| DATE       | CRS CODE | COURSE TITLE             | CLASS | ROOM | SESSION |
+|------------|----------|--------------------------|-------|------|---------|
+| 10/04/2026 | CE 461   | Industrial Electronics   | CE 4A | GF 1 | M       |
+| 16/04/2026 | CE 469   | Fundamentals of Robotics | CE 4B | SF 2 | E       |
 ```
 
 ## Integration with API
@@ -211,12 +229,14 @@ period_mapping = {
 - Exam: Date-based structure with exam details
 - Both include location, time, and course information
 
+For exams, the backend returns one row per class group. The frontend groups repeated rows for the same paper so one paper can appear once with multiple classes beneath it.
+
 ## File Management
 
 ### Storage Location
-- Lecture timetables: `drafts/` directory
-- Exam timetables: Same directory with different naming
-- File naming: `Draft_1.xlsx`, `Draft_2.xlsx`, etc.
+- Lecture timetables: `api/drafts/`
+- Exam timetables: `api/drafts/`
+- Example file naming: `Draft_1.xlsx`, `Draft_2.xlsx`, `Draft_1_ex.xlsx`
 
 ### Version Control
 - File hash detection for changes
@@ -230,6 +250,8 @@ period_mapping = {
 2. **Class Pattern Matching**: Verify regex patterns for department codes
 3. **Merged Cell Problems**: Ensure proper cell merging in Excel
 4. **Sheet Name Issues**: Use exact day names for lecture timetables
+5. **Exam Header Issues**: Ensure the workbook still includes `DATE`, `CLASS`, and `SESSION` or `PERIOD`
+6. **Missing Exam Rows**: If a class exists in lectures but not exams, verify the exam workbook actually includes that class prefix
 
 ### Debugging Tips
 - Check raw Excel data before processing
