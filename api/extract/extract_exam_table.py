@@ -30,7 +30,13 @@ def _normalize_exam_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _convert_exam_dates(date_series: pd.Series) -> pd.Series:
-    """Convert either Excel serial dates or parsed datetimes to display strings."""
+    """Normalize exam date values to a datetime-like Series.
+
+    Accepts a Series containing either Excel serial date numbers or already
+    parsed datetime-like values and returns a Series of pandas datetime
+    objects. String formatting for display is performed separately (e.g. in
+    ``format_date_with_suffix``).
+    """
     numeric_dates = pd.to_numeric(date_series, errors="coerce")
 
     if numeric_dates.notna().all():
