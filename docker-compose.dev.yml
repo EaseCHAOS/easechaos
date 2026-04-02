@@ -1,15 +1,13 @@
 services:
   redis:
     image: redis:7.2.4-alpine3.19
-    container_name: redis
-    ports:
-      - "$REDIS_PORT:$REDIS_PORT"
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-localdev}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-localdev}"]
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-localdev}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -18,35 +16,32 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: easechaos-api
-    command: /bin/sh -c "uvicorn app:app --host 0.0.0.0 --port $PORT --reload"
+    command: /bin/sh -c "uvicorn api.api:app --host 0.0.0.0 --port $PORT --reload"
     volumes:
       - ./api:/app/api
-      - ./api/api.py:/app/api.py
       - ./requirements.txt:/app/requirements.txt
     ports:
-      - "$PORT:$PORT"
+      - "${PORT:-8000}:${PORT:-8000}"
     environment:
-      - PORT=${PORT}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - PORT=${PORT:-8000}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-localdev}
     depends_on:
       redis:
         condition: service_healthy
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: ../Dockerfile.frontend.dev
-    container_name: easechaos-frontend
+      context: .
+      dockerfile: Dockerfile.frontend.dev
     volumes:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     environment:
-      - VITE_API_URL=http://localhost:${PORT}
+      - VITE_API_URL=http://localhost:${PORT:-8000}/api/v1
     depends_on:
       - api
 

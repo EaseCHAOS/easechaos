@@ -66,6 +66,7 @@ For detailed documentation, see the [docs/](./docs) folder:
 1. Clone the repository
 2. Copy and rename `.env.sample` to `.env`
 3. Run `make up` to start the application on docker.
+4. Open `http://localhost:5173` for the frontend and `http://localhost:8000/api/v1/healthcheck` to confirm the API is running.
 
 NB: This project is still under development. You might encounter bugs with the processed data. However, issues stem from the drafts, and has nothing to do with the extractor in most cases. Refer to the IT department and respective class reps to resolve clashes and unfamiliar conventions.
 

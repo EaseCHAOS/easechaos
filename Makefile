@@ -1,14 +1,13 @@
 .PHONY: run-backend run-frontend install build up down local clean test lint format
 
 DOCKER_COMPOSE_FILE=docker-compose.dev.yml
-VOLUMES=easechaose_redis-data
+VOLUMES=easechaos_redis-data
 
 install:
 	pip install -r requirements.txt
 	cd frontend && pnpm install
 
 run-backend:
-	cd api
 	python3 -m uvicorn api.api:app --reload --port 3000
 
 run-frontend:
@@ -20,16 +19,16 @@ local:
 	make run-frontend
 
 build:
-	docker-compose -f $(DOCKER_COMPOSE_FILE) build
+	docker compose -f $(DOCKER_COMPOSE_FILE) build
 
 up:
-	docker-compose -f $(DOCKER_COMPOSE_FILE) up
+	docker compose -f $(DOCKER_COMPOSE_FILE) up --build
 
 down:
-	docker-compose -f $(DOCKER_COMPOSE_FILE) down
+	docker compose -f $(DOCKER_COMPOSE_FILE) down
 
 clean:
-	docker-compose -f $(DOCKER_COMPOSE_FILE) down -v
+	docker compose -f $(DOCKER_COMPOSE_FILE) down -v
 	docker volume rm $(VOLUMES)
 
 test:
