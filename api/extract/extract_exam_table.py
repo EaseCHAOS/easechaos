@@ -82,7 +82,12 @@ def get_exam_timetable(filename, class_pattern) -> pd.DataFrame:
     df[period_col] = df[period_col].astype(str).str.strip()
     df = df[df[period_col].isin(PERIOD_MAPPING.keys())]
 
-    df["START"], df["END"] = zip(*df[period_col].map(PERIOD_MAPPING))
+    if df.empty:
+        # No valid PERIOD/SESSION rows; propagate an empty result without raising.
+        df["START"] = pd.Series(dtype=object)
+        df["END"] = pd.Series(dtype=object)
+    else:
+        df["START"], df["END"] = zip(*df[period_col].map(PERIOD_MAPPING))
     df = df.drop(columns=[period_col])
 
     def format_date_with_suffix(date):
