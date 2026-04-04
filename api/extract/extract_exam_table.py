@@ -11,7 +11,7 @@ COLUMN_ALIASES = {
     "COURSE NAME": ["COURSE NAME", "COURSE TITLE"],
     "CLASS": ["CLASS"],
     "LECTURER": ["LECTURER", "EXAMINER"],
-    "LECTURE HALL": ["LECTURE HALL", "ROOM"],
+    "LECTURE HALL": ["LECTURE HALL", "ROOM", "EXAM HALL"],
     "INVIGILATOR (UPDATED)": ["INVIGILATOR (UPDATED)", "INVIGILATOR"],
     "PERIOD": ["PERIOD", "SESSION"],
     "NO": ["NO", "No."],
@@ -93,9 +93,7 @@ def get_exam_timetable(filename, class_pattern) -> pd.DataFrame:
     def format_date_with_suffix(date):
         day = date.day
         suffix = (
-            "th"
-            if 11 <= day <= 13
-            else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+            "th" if 11 <= day <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
         )
         return date.strftime(f"%A, {day}{suffix} %B %Y")
 

@@ -65,23 +65,23 @@ const examWindows: {
   id: ExamWindow;
   shortLabel: string;
 }[] = [
-  {
-    id: "all",
-    shortLabel: "All Exams",
-  },
-  {
-    id: "today",
-    shortLabel: "Today",
-  },
-  {
-    id: "this-week",
-    shortLabel: "This Week",
-  },
-  {
-    id: "next-week",
-    shortLabel: "Next Week",
-  },
-];
+    {
+      id: "all",
+      shortLabel: "All Exams",
+    },
+    {
+      id: "today",
+      shortLabel: "Today",
+    },
+    {
+      id: "this-week",
+      shortLabel: "This Week",
+    },
+    {
+      id: "next-week",
+      shortLabel: "Next Week",
+    },
+  ];
 
 const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const panelClasses =
@@ -1007,10 +1007,10 @@ export default function ExamView({
                           ? "bg-blue-50 dark:bg-[#1E3A5F]"
                           : "bg-white dark:bg-[#262626]",
                         dayGroup &&
-                          !isSelected &&
-                          "dark:bg-[#2B313A] dark:hover:bg-[#343B46]",
+                        !isSelected &&
+                        "dark:bg-[#2B313A] dark:hover:bg-[#343B46]",
                         !isCurrentMonth &&
-                          "bg-[#FAFAFA] text-[#A1A1AA] dark:bg-[#1C1C1C] dark:text-[#6F6F6F]",
+                        "bg-[#FAFAFA] text-[#A1A1AA] dark:bg-[#1C1C1C] dark:text-[#6F6F6F]",
                       )}
                     >
                       <div className="mb-1.5 flex items-center justify-between sm:mb-2">
@@ -1018,8 +1018,8 @@ export default function ExamView({
                           className={clsx(
                             "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold sm:h-7 sm:w-7 sm:text-sm",
                             !isTodayDate &&
-                              !isSelected &&
-                              "text-[#111827] dark:text-[#F0F6FC]",
+                            !isSelected &&
+                            "text-[#111827] dark:text-[#F0F6FC]",
                             isTodayDate && !isSelected && accentStrongClasses,
                             isSelected && accentStrongClasses,
                           )}
