@@ -34,7 +34,14 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    networks:
+      - default
+      - vps_default
 
 volumes:
   redis-data:
   api-data:
+
+networks:
+  vps_default:
+    name: vps_default
