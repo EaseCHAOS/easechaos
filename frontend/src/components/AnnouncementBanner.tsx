@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { announcements, type Announcement } from "../config/announcements";
 import { X } from "lucide-react";
 
-function activeAnnouncements(announcements: Announcement[]): Announcement | null {
-  return announcements.find((a) => a.active) ?? null;
+function activeAnnouncements(items: Announcement[]): Announcement | null {
+  return items.find((a) => a.active) ?? null;
 }
 
 const STORAGE_KEY_PREFIX = "dismissed_announcement_";
@@ -14,7 +14,7 @@ const variantStyles: Record<string, string> = {
   warning: "bg-yellow-200 border-yellow-700 text-yellow-900 dark:bg-yellow-900/80 dark:text-yellow-100 dark:border-yellow-400",
 };
 
-const variantIcons: Record<string, JSX.Element> = {
+const variantIcons: Record<string, ReactNode> = {
   info: (
     <svg width="16" height="16" viewBox="0 0 24 24" strokeWidth="1.5" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-5" aria-label="Info">
       <title>Info</title>

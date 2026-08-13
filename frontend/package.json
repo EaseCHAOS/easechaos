@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "lint": "oxlint"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.2.6",
@@ -17,31 +18,28 @@
     "date-fns": "^3.6.0",
     "file-saver": "^2.0.5",
     "html-to-image": "^1.11.11",
-    "lucide-react": "^0.344.0",
-    "react": "^18.3.1",
-    "react-day-picker": "^8.10.1",
-    "react-dom": "^18.3.1",
+    "lucide-react": "^1.31.0",
+    "react": "^19.2.8",
+    "react-day-picker": "^9.14.0",
+    "react-dom": "^19.2.8",
     "react-helmet-async": "^3.0.0",
     "react-router-dom": "^6.28.0",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.15.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
-    "eslint": "^9.15.0",
-    "eslint-plugin-react-hooks": "5.1.0-rc-fb9a90fa48-20240614",
-    "eslint-plugin-react-refresh": "^0.4.14",
-    "globals": "^15.12.0",
+    "babel-plugin-react-compiler": "^1.0.0",
     "html2pdf.js": "^0.10.2",
+    "oxlint": "^1.78.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
-    "typescript": "^5.6.3",
-    "typescript-eslint": "^8.14.0",
+    "typescript": "^7.0.2",
     "vite": "^5.4.11",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite-plugin-pwa": "^0.21.1",
+    "workbox-window": "^7.4.1"
   },
   "packageManager": "pnpm@9.13.2+sha512.88c9c3864450350e65a33587ab801acf946d7c814ed1134da4a924f6df5a2120fd36b46aab68f7cd1d413149112d53c7db3a4136624cfd00ff1846a0c6cef48a"
 }

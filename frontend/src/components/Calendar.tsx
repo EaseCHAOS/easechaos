@@ -23,6 +23,43 @@ type ViewMode = "day" | "week";
 const WeekView = lazy(() => import("./WeekView"));
 const DayView = lazy(() => import("./DayView"));
 
+const fetchFresh = async (dept: string, year: string) => {
+  const response = await fetch(import.meta.env.VITE_API_URL + "/get_time_table", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      class_pattern: `${dept} ${year}`,
+      is_exam: false,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch schedule");
+  }
+
+  const { data, version } = await response.json();
+  localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
+  localStorage.setItem(`schedule:${dept}:${year}:version`, version);
+  return data;
+};
+
+function formatCellContent(value: string): string {
+  if (!value) return value;
+
+  const [mainText, ...bracketsContent] = value.split(/(\(.*?\))/g);
+
+  const formattedMain = mainText
+    .replace(/^(?:[A-Z]{2,3}\s+)+/g, "")
+    .replace(/\s+[A-Z]{2,3}\s+(?=\d)/g, " ")
+    .replace(/(?:[A-Z]{2,3},?\s*)+(?=\d)/g, "")
+    .replace(/(\d[A-Z])\s+[A-Z]{2,3}\s+(\d)/g, "$1 $2")
+    .replace(/\s*,\s*/g, ", ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return formattedMain + bracketsContent.join("");
+}
+
 export default function Calendar() {
   const [schedule, setSchedule] = useState<WeekSchedule>([]);
   const [error, setError] = useState<string | null>(null);
@@ -38,32 +75,34 @@ export default function Calendar() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const analytics = useAnalytics();
 
-  const fetchSchedule = async (dept: string, year: string) => {
-    const cacheKey = `schedule:${dept}:${year}`;
+  const fetchSchedule = async (deptCode: string, yearCode: string) => {
+    const cacheKey = `schedule:${deptCode}:${yearCode}`;
     const versionKey = `${cacheKey}:version`;
 
     const cachedData = localStorage.getItem(cacheKey);
     const cachedVersion = localStorage.getItem(versionKey);
 
     if (cachedData) {
-      validateAndUpdateCache(dept, year, cachedData, cachedVersion).catch(console.error);
+      validateAndUpdateCache(deptCode, yearCode, cachedVersion).catch(console.error);
       return JSON.parse(cachedData);
     }
 
     try {
-      return await fetchFresh(dept, year);
-    } catch (error) {
+      return await fetchFresh(deptCode, yearCode);
+    } catch (err) {
       if (!navigator.onLine) {
-        throw new Error("You are offline and no cached schedule is available");
+        throw new Error(
+          "You are offline and no cached schedule is available",
+          { cause: err },
+        );
       }
-      throw error;
+      throw err;
     }
   };
 
   const validateAndUpdateCache = async (
-    dept: string,
-    year: string,
-    cachedData: string,
+    deptCode: string,
+    yearCode: string,
     cachedVersion: string | null,
   ) => {
     try {
@@ -79,7 +118,7 @@ export default function Calendar() {
             Expires: "0",
           },
           body: JSON.stringify({
-            class_pattern: `${dept} ${year}`,
+            class_pattern: `${deptCode} ${yearCode}`,
           }),
         },
       );
@@ -90,37 +129,17 @@ export default function Calendar() {
 
       if (version !== cachedVersion) {
         console.log("New version detected, updating cache...");
-        localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
-        localStorage.setItem(`schedule:${dept}:${year}:version`, version);
-        localStorage.removeItem(`${dept}:${year}:lastCheck`);
+        localStorage.setItem(`schedule:${deptCode}:${yearCode}`, JSON.stringify(data));
+        localStorage.setItem(`schedule:${deptCode}:${yearCode}:version`, version);
+        localStorage.removeItem(`${deptCode}:${yearCode}:lastCheck`);
         setSchedule(data);
         return;
       }
 
-      localStorage.setItem(`${dept}:${year}:lastCheck`, Date.now().toString());
-    } catch (error) {
-      console.error("Background validation failed:", error);
+      localStorage.setItem(`${deptCode}:${yearCode}:lastCheck`, Date.now().toString());
+    } catch (err) {
+      console.error("Background validation failed:", err);
     }
-  };
-
-  const fetchFresh = async (dept: string, year: string) => {
-    const response = await fetch(import.meta.env.VITE_API_URL + "/get_time_table", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        class_pattern: `${dept} ${year}`,
-        is_exam: false,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch schedule");
-    }
-
-    const { data, version } = await response.json();
-    localStorage.setItem(`schedule:${dept}:${year}`, JSON.stringify(data));
-    localStorage.setItem(`schedule:${dept}:${year}:version`, version);
-    return data;
   };
 
   useEffect(() => {
@@ -206,7 +225,7 @@ export default function Calendar() {
       const cachedVersion = localStorage.getItem(`schedule:${dept}:${year}:version`);
 
       if (cachedData) {
-        validateAndUpdateCache(dept, year, cachedData, cachedVersion);
+        validateAndUpdateCache(dept, year, cachedVersion);
       }
     };
 
@@ -253,8 +272,8 @@ export default function Calendar() {
           localStorage.setItem(`schedule:${dept}:${year}:version`, version);
           setSchedule(data);
         }
-      } catch (error) {
-        console.error("Auto-refresh failed:", error);
+      } catch (err) {
+        console.error("Auto-refresh failed:", err);
       } finally {
         setIsRefreshing(false);
       }
@@ -293,39 +312,24 @@ export default function Calendar() {
     (day) => day.day === dayNames[selectedDate.getDay() - 1],
   );
 
-  const formatCellContent = (value: string) => {
-    if (!value) return value;
-
-    const [mainText, ...bracketsContent] = value.split(/(\(.*?\))/g);
-
-    const formattedMain = mainText
-      .replace(/^(?:[A-Z]{2,3}\s+)+/g, "")
-      .replace(/\s+[A-Z]{2,3}\s+(?=\d)/g, " ")
-      .replace(/(?:[A-Z]{2,3},?\s*)+(?=\d)/g, "")
-      .replace(/(\d[A-Z])\s+[A-Z]{2,3}\s+(\d)/g, "$1 $2")
-      .replace(/\s*,\s*/g, ", ")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    return formattedMain + bracketsContent.join("");
-  };
-
-  const scheduleData = schedule.map((day) => ({
-    ...day,
-    data: day.data.map((slot) => ({
-      ...slot,
-      value: slot.value ? formatCellContent(slot.value) : null,
-    })),
-  }));
+  const scheduleData = schedule.map((day) =>
+    Object.assign({}, day, {
+      data: day.data.map((slot) =>
+        Object.assign({}, slot, {
+          value: slot.value ? formatCellContent(slot.value) : null,
+        }),
+      ),
+    }),
+  );
 
   const formattedDaySchedule = currentDaySchedule
-    ? {
-        ...currentDaySchedule,
-        data: currentDaySchedule.data.map((slot) => ({
-          ...slot,
-          value: slot.value ? formatCellContent(slot.value) : null,
-        })),
-      }
+    ? Object.assign({}, currentDaySchedule, {
+        data: currentDaySchedule.data.map((slot) =>
+          Object.assign({}, slot, {
+            value: slot.value ? formatCellContent(slot.value) : null,
+          }),
+        ),
+      })
     : undefined;
 
   return (

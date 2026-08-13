@@ -4,6 +4,7 @@ import {
   addDays,
   addMonths,
   addWeeks,
+  differenceInCalendarDays,
   endOfWeek,
   endOfMonth,
   format,
@@ -19,6 +20,7 @@ import {
   subMonths,
 } from "date-fns";
 import {
+  BellRing,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -31,6 +33,7 @@ import {
   Users,
 } from "lucide-react";
 import { ExamData, DayData, TimetableData } from "../types";
+import { getCourseColor } from "../lib/courseColors";
 import {
   downloadEventsAsICS,
   downloadElementAsImage,
@@ -47,12 +50,16 @@ interface ExamViewProps {
 type ExamWindow = "today" | "this-week" | "next-week" | "all";
 type AllExamsView = "month" | "agenda";
 
+const REMINDER_MODE_STORAGE_KEY = "easechaos:reminder-mode";
+
 interface SubjectGroup {
   name: string;
   start: string;
   end: string;
   exams: ExamData[];
 }
+
+type ReminderMode = "off" | "day-before";
 
 interface DayGroup {
   day: string;
@@ -212,14 +219,15 @@ function organizeExamsByDayAndSubject(data: DayData[]): DayGroup[] {
   });
 
   return Array.from(groupedDays.values())
-    .map((day) => ({
-      ...day,
-      subjects: day.subjects.sort((left, right) =>
-        left.start.localeCompare(right.start),
-      ),
-    }))
+    .map((day) =>
+      Object.assign({}, day, {
+        subjects: day.subjects.toSorted((left, right) =>
+          left.start.localeCompare(right.start),
+        ),
+      }),
+    )
     .filter((day) => day.totalExams > 0)
-    .sort((left, right) => left.date.getTime() - right.date.getTime());
+    .toSorted((left, right) => left.date.getTime() - right.date.getTime());
 }
 
 function buildMonthDays(activeMonth: Date): Date[] {
@@ -272,44 +280,6 @@ function buildExamCalendarEvents(days: DayGroup[]) {
           .join("\n"),
       };
     }),
-  );
-}
-
-interface WindowTabButtonProps {
-  count: number;
-  isActive: boolean;
-  label: string;
-  onClick: () => void;
-}
-
-function WindowTabButton({
-  count,
-  isActive,
-  label,
-  onClick,
-}: WindowTabButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={clsx(
-        "inline-flex w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors sm:w-auto sm:justify-start sm:gap-3",
-        isActive
-          ? "border-[#D4D4D8] bg-white text-[#111827] shadow-sm dark:border-[#303030] dark:bg-[#262626] dark:text-[#F0F6FC]"
-          : "border-[#E4E4E7] bg-[#FAFAFA] text-[#71717A] hover:bg-white dark:border-[#303030] dark:bg-[#303030] dark:text-[#B2B2B2] dark:hover:bg-[#3A3A3A]",
-      )}
-    >
-      <span className="truncate">{label}</span>
-      <span
-        className={clsx(
-          "inline-flex min-w-7 items-center justify-center rounded-sm px-2 py-0.5 text-xs font-semibold",
-          isActive
-            ? "bg-[#F4F4F5] text-[#111827] dark:bg-[#303030] dark:text-[#F0F6FC]"
-            : "bg-white text-[#52525B] dark:bg-[#262626] dark:text-[#B2B2B2]",
-        )}
-      >
-        {count}
-      </span>
-    </button>
   );
 }
 
@@ -392,6 +362,25 @@ function ExamClassRow({ exam }: ExamClassRowProps) {
   );
 }
 
+function handleEnableNotifications(): void {
+  if ("Notification" in window) {
+    void Notification.requestPermission();
+  }
+}
+
+function renderSubjectClassRows(subject: SubjectGroup, dayKey: string) {
+  return (
+    <div className="mt-3 space-y-2">
+      {subject.exams.map((exam) => (
+        <ExamClassRow
+          key={`${dayKey}-${subject.name}-${exam.class}-${exam.location}`}
+          exam={exam}
+        />
+      ))}
+    </div>
+  );
+}
+
 interface SubjectMetaProps {
   classCount: number;
   end: string;
@@ -422,94 +411,342 @@ function SubjectMeta({ classCount, end, start }: SubjectMetaProps) {
 }
 
 interface AgendaPaperCardProps {
+  dayDate: Date;
   subject: SubjectGroup;
 }
 
-function AgendaPaperCard({ subject }: AgendaPaperCardProps) {
+function AgendaPaperCard({
+  dayDate,
+  subject,
+}: AgendaPaperCardProps) {
   const locations = getUniqueLocations(subject.exams);
   const primaryLocation = locations[0];
   const secondaryLocationCount = Math.max(locations.length - 3, 0);
 
   return (
     <article className={clsx("overflow-hidden rounded-xl", panelClasses)}>
-      <div className="flex flex-col gap-5 px-5 py-5 lg:grid lg:grid-cols-[minmax(0,1fr)_11rem] lg:items-center lg:px-6">
-        <div className="min-w-0">
-          <h4
-            className={clsx(
-              "text-xl font-semibold leading-tight",
-              primaryTextClasses,
-            )}
-          >
-            {subject.name}
-          </h4>
-
-          <div
-            className={clsx(
-              "mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm",
-              mutedTextClasses,
-            )}
-          >
-            <div className="inline-flex items-center gap-2">
-              <Clock3 className="h-4 w-4" />
-              <span>
-                {subject.start} - {subject.end}
-              </span>
-            </div>
-            <div className="inline-flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>
-                {formatClassCount(subject.exams.length)} (
-                {formatClassList(subject.exams)})
-              </span>
-            </div>
-            {primaryLocation ? (
-              <div className="inline-flex items-center gap-2 lg:hidden">
-                <MapPin className="h-4 w-4" />
-                <span>{locations.join(", ")}</span>
+      <div className="flex">
+        <span
+          className={clsx(
+            "w-1 flex-none rounded-r-lg",
+            getCourseColor(subject.name).strong,
+          )}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-5 px-5 py-5 lg:grid lg:grid-cols-[minmax(0,1fr)_11rem] lg:items-center lg:px-6">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h4
+                  className={clsx(
+                    "text-xl font-semibold leading-tight",
+                    primaryTextClasses,
+                  )}
+                >
+                  {subject.name}
+                </h4>
+                <PaperDayBadge start={parseTimeToDate(dayDate, subject.start)} />
               </div>
-            ) : null}
-          </div>
-        </div>
 
-        <div className="border-t border-[#E4E4E7] pt-4 dark:border-[#303030] lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
-          <div className="flex mb-2 gap-1.5 justify-center">
-            {locations.slice(0, 3).map((location) => (
-              <span
-                key={location}
+              <div
                 className={clsx(
-                  "flex h-12 w-12 items-center justify-center rounded-[0.75rem] text-[12px] font-semibold",
-                  accentSoftClasses,
-                )}
-              >
-                {location}
-              </span>
-            ))}
-            {secondaryLocationCount > 0 ? (
-              <span
-                className={clsx(
-                  "flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[11px] font-semibold",
-                  subtleSurfaceClasses,
+                  "mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm",
                   mutedTextClasses,
                 )}
               >
-                +{secondaryLocationCount}
-              </span>
-            ) : null}
-          </div>
+                <div className="inline-flex items-center gap-2">
+                  <Clock3 className="h-4 w-4" />
+                  <span>
+                    {subject.start} - {subject.end}
+                  </span>
+                </div>
+                <div className="inline-flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>
+                    {formatClassCount(subject.exams.length)} (
+                    {formatClassList(subject.exams)})
+                  </span>
+                </div>
+                {primaryLocation ? (
+                  <div className="inline-flex items-center gap-2 lg:hidden">
+                    <MapPin className="h-4 w-4" />
+                    <span>{locations.join(", ")}</span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
 
-          <div className="mt-3 text-center sm:text-center lg:text-right">
-            <p
-              className={clsx(
-                "text-xs font-semibold uppercase tracking-[0.12em]",
-                mutedTextClasses,
-              )}
-            >
-              Venue
-            </p>
+            <div className="border-t border-[#E4E4E7] pt-4 dark:border-[#303030] lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+              <div className="flex justify-center gap-1.5 mb-2">
+                {locations.slice(0, 3).map((location) => (
+                  <span
+                    key={location}
+                    className={clsx(
+                      "flex h-12 w-12 items-center justify-center rounded-[0.75rem] text-[12px] font-semibold",
+                      accentSoftClasses,
+                    )}
+                  >
+                    {location}
+                  </span>
+                ))}
+                {secondaryLocationCount > 0 ? (
+                  <span
+                    className={clsx(
+                      "flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[11px] font-semibold",
+                      subtleSurfaceClasses,
+                      mutedTextClasses,
+                    )}
+                  >
+                    +{secondaryLocationCount}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="mt-3 text-center sm:text-center lg:text-right">
+                <p
+                  className={clsx(
+                    "text-xs font-semibold uppercase tracking-[0.12em]",
+                    mutedTextClasses,
+                  )}
+                >
+                  Venue
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </article>
+  );
+}
+
+interface PaperDayBadgeProps {
+  start: Date;
+}
+
+function PaperDayBadge({ start }: PaperDayBadgeProps) {
+  const dayDiff = differenceInCalendarDays(startOfDay(start), startOfToday());
+
+  let label: string;
+  let classes: string;
+
+  if (dayDiff < 0) {
+    label = "Finished";
+    classes = "bg-[#F4F4F5] text-[#71717A] dark:bg-[#303030] dark:text-[#B2B2B2]";
+  } else if (dayDiff === 0) {
+    label = "Today";
+    classes = accentStrongClasses;
+  } else if (dayDiff === 1) {
+    label = "Tomorrow";
+    classes = accentStrongClasses;
+  } else {
+    label = `${dayDiff} days left`;
+    classes = accentSoftClasses;
+  }
+
+  return (
+    <span
+      className={clsx(
+        "inline-flex flex-none items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+        classes,
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+interface UpcomingPaper {
+  name: string;
+  start: Date;
+}
+
+interface CountdownSegmentProps {
+  label: string;
+  value: string;
+}
+
+function CountdownSegment({ label, value }: CountdownSegmentProps) {
+  return (
+    <div className="flex flex-col items-center">
+      <span
+        className={clsx(
+          "text-xl font-bold tabular-nums leading-none sm:text-2xl",
+          primaryTextClasses,
+        )}
+      >
+        {value}
+      </span>
+      <span
+        className={clsx(
+          "mt-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
+          mutedTextClasses,
+        )}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function formatCountdownParts(ms: number) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+
+  return {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
+}
+
+function padTwoDigits(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+interface NextExamCountdownProps {
+  upcomingPapers: UpcomingPaper[];
+}
+
+function NextExamCountdown({ upcomingPapers }: NextExamCountdownProps) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const nextPaper = upcomingPapers.find(
+    (paper) => paper.start.getTime() > now,
+  );
+
+  if (!nextPaper) {
+    if (upcomingPapers.length === 0) {
+      return null;
+    }
+
+    return (
+      <div
+        className={clsx(
+          "rounded-lg px-4 py-3",
+          panelClasses,
+          subtleSurfaceClasses,
+        )}
+      >
+        <p className={clsx("text-sm font-medium", mutedTextClasses)}>
+          All scheduled papers have ended. Best of luck!
+        </p>
+      </div>
+    );
+  }
+
+  const { days, hours, minutes, seconds } = formatCountdownParts(
+    nextPaper.start.getTime() - now,
+  );
+
+  return (
+    <section className={clsx("overflow-hidden rounded-lg", panelClasses)}>
+      <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="min-w-0">
+          <p
+            className={clsx(
+              "text-[11px] font-semibold uppercase tracking-[0.16em]",
+              mutedTextClasses,
+            )}
+          >
+            Next Paper
+          </p>
+          <h3
+            className={clsx(
+              "mt-1 truncate text-lg font-bold leading-tight",
+              primaryTextClasses,
+            )}
+          >
+            {nextPaper.name}
+          </h3>
+          <p className={clsx("mt-0.5 text-sm", mutedTextClasses)}>
+            {format(nextPaper.start, "EEEE, MMM d 'at' h:mm a")}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 sm:gap-5">
+          <CountdownSegment value={String(days)} label="days" />
+          <CountdownSegment value={padTwoDigits(hours)} label="hrs" />
+          <CountdownSegment value={padTwoDigits(minutes)} label="min" />
+          <CountdownSegment value={padTwoDigits(seconds)} label="sec" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function loadReminderMode(): ReminderMode {
+  try {
+    return localStorage.getItem(REMINDER_MODE_STORAGE_KEY) === "day-before"
+      ? "day-before"
+      : "off";
+  } catch {
+    return "off";
+  }
+}
+
+function getReminderKey(dayDate: Date, subjectName: string): string {
+  return `${getDateKey(dayDate)}::${subjectName}`;
+}
+
+interface RemindersPanelProps {
+  onEnableNotifications: () => void;
+  reminderMode: ReminderMode;
+  onReminderModeChange: (mode: ReminderMode) => void;
+}
+
+function RemindersPanel({
+  onEnableNotifications,
+  reminderMode,
+  onReminderModeChange,
+}: RemindersPanelProps) {
+  const canRequestPermission =
+    typeof window !== "undefined" &&
+    "Notification" in window &&
+    Notification.permission !== "granted" &&
+    Notification.permission !== "denied";
+
+  return (
+    <div className="flex items-center gap-2">
+      <BellRing className="h-4 w-4 flex-none text-[#71717A] dark:text-[#B2B2B2]" />
+      <span className="text-sm text-[#71717A] dark:text-[#B2B2B2]">
+        Day-before reminders
+      </span>
+      {canRequestPermission && reminderMode === "day-before" ? (
+        <button
+          type="button"
+          onClick={onEnableNotifications}
+          className="rounded-md border border-[#E4E4E7] bg-[#FAFAFA] px-2 py-1 text-[11px] font-semibold text-[#52525B] hover:bg-white dark:border-[#303030] dark:bg-[#303030] dark:text-[#B2B2B2] dark:hover:bg-[#3A3A3A]"
+        >
+          Enable alerts
+        </button>
+      ) : null}
+      <button
+        type="button"
+        onClick={() =>
+          onReminderModeChange(reminderMode === "day-before" ? "off" : "day-before")
+        }
+        aria-pressed={reminderMode === "day-before"}
+        className={clsx(
+          "relative inline-flex h-6 w-11 flex-none cursor-pointer items-center rounded-full transition-colors",
+          reminderMode === "day-before"
+            ? "bg-[#2457A7] dark:bg-[#4593F8]"
+            : "bg-[#D4D4D8] dark:bg-[#52525B]",
+          )}
+        >
+          <span
+            className={clsx(
+              "absolute left-0.5 inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform",
+              reminderMode === "day-before" ? "translate-x-5" : "translate-x-0",
+            )}
+          />
+        </button>
+    </div>
   );
 }
 
@@ -522,9 +759,13 @@ export default function ExamView({
   const selectedDayDetailsRef = useRef<HTMLElement | null>(null);
   const shouldScrollToDetailsRef = useRef(false);
   const downloadDropdownRef = useRef<HTMLDivElement | null>(null);
-  const [activeWindow, setActiveWindow] = useState<ExamWindow>("all");
+  const [activeWindow, setActiveWindow] = useState<ExamWindow>(
+    typeof window !== "undefined" && window.innerWidth < 640 ? "today" : "all",
+  );
   const [allExamsView, setAllExamsView] = useState<AllExamsView>("month");
   const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
+  const [reminderMode, setReminderMode] = useState<ReminderMode>(loadReminderMode);
+  const firedNotificationsRef = useRef<Set<string>>(new Set());
   const allExamDays = organizeExamsByDayAndSubject(timetableData.data);
 
   const startCurrentWeek = startOfWeek(today, { weekStartsOn: 1 });
@@ -570,6 +811,64 @@ export default function ExamView({
       new Map(allExamDays.map((day) => [getDateKey(day.date), day] as const)),
     [allExamDays],
   );
+  const courseLegend = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          allExamDays.flatMap((day) =>
+            day.subjects.map((subject) => subject.name),
+          ),
+        ),
+      ).toSorted(),
+    [allExamDays],
+  );
+  const upcomingPapers = useMemo(
+    () =>
+      allExamDays
+        .filter((day) => !isBefore(startOfDay(day.date), startOfToday()))
+        .flatMap((day) =>
+          day.subjects.map((subject) => ({
+            name: subject.name,
+            start: parseTimeToDate(day.date, subject.start),
+          })),
+        )
+        .toSorted((left, right) => left.start.getTime() - right.start.getTime()),
+    [allExamDays],
+  );
+  useEffect(() => {
+    localStorage.setItem(REMINDER_MODE_STORAGE_KEY, reminderMode);
+  }, [reminderMode]);
+
+  useEffect(() => {
+    if (!("Notification" in window) || Notification.permission !== "granted") {
+      return;
+    }
+
+    if (reminderMode !== "day-before") {
+      return;
+    }
+
+    const now = Date.now();
+
+    upcomingPapers.forEach((paper) => {
+      const key = getReminderKey(startOfDay(paper.start), paper.name);
+      const hoursLeft = Math.ceil((paper.start.getTime() - now) / 3600000);
+
+      if (hoursLeft < 24 || hoursLeft > 48) {
+        return;
+      }
+
+      if (firedNotificationsRef.current.has(key)) {
+        return;
+      }
+
+      firedNotificationsRef.current.add(key);
+      void new Notification(`${paper.name} tomorrow`, {
+        body: `${format(paper.start, "EEE, MMM d 'at' h:mm a")} — EaseCHAOS`,
+      });
+    });
+  }, [upcomingPapers, reminderMode]);
+
   const calendarExportEvents = useMemo(
     () => buildExamCalendarEvents(allExamDays),
     [allExamDays],
@@ -674,14 +973,19 @@ export default function ExamView({
               <div className="space-y-3 px-4 py-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <h4
-                      className={clsx(
-                        "text-base font-semibold leading-tight",
-                        primaryTextClasses,
-                      )}
-                    >
-                      {subject.name}
-                    </h4>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4
+                        className={clsx(
+                          "text-base font-semibold leading-tight",
+                          primaryTextClasses,
+                        )}
+                      >
+                        {subject.name}
+                      </h4>
+                      <PaperDayBadge
+                        start={parseTimeToDate(day.date, subject.start)}
+                      />
+                    </div>
                     <div className="mt-2">
                       <SubjectMeta
                         classCount={subject.exams.length}
@@ -707,17 +1011,6 @@ export default function ExamView({
       </section>
     ));
   };
-
-  const renderSubjectClassRows = (subject: SubjectGroup, dayKey: string) => (
-    <div className="mt-3 space-y-2">
-      {subject.exams.map((exam) => (
-        <ExamClassRow
-          key={`${dayKey}-${subject.name}-${exam.class}-${exam.location}`}
-          exam={exam}
-        />
-      ))}
-    </div>
-  );
 
   const renderSelectedDayDetails = () => (
     <section
@@ -753,28 +1046,44 @@ export default function ExamView({
           selectedCalendarDay.subjects.map((subject) => (
             <article
               key={`${selectedCalendarDay.day}-${subject.name}`}
-              className="px-3 py-4 sm:px-4 lg:px-5"
+              className="flex gap-3 px-3 py-4 sm:px-4 lg:px-5"
             >
-              <div className="flex flex-col justify-between gap-4 md:flex-row">
-                <div className="flex-1">
-                  <h3
-                    className={clsx(
-                      "mb-2 text-2xl font-bold leading-tight",
-                      primaryTextClasses,
-                    )}
-                  >
-                    {subject.name}
-                  </h3>
+              <span
+                className={clsx(
+                  "h-auto w-1 flex-none rounded-full",
+                  getCourseColor(subject.name).strong,
+                )}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-col justify-between gap-4 md:flex-row">
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3
+                        className={clsx(
+                          "text-2xl font-bold leading-tight",
+                          primaryTextClasses,
+                        )}
+                      >
+                        {subject.name}
+                      </h3>
+                      <PaperDayBadge
+                        start={parseTimeToDate(
+                          selectedCalendarDay.date,
+                          subject.start,
+                        )}
+                      />
+                    </div>
 
-                  <SubjectMeta
-                    classCount={subject.exams.length}
-                    end={subject.end}
-                    start={subject.start}
-                  />
+                    <SubjectMeta
+                      classCount={subject.exams.length}
+                      end={subject.end}
+                      start={subject.start}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {renderSubjectClassRows(subject, selectedCalendarDay.day)}
+                {renderSubjectClassRows(subject, selectedCalendarDay.day)}
+              </div>
             </article>
           ))
         ) : (
@@ -970,6 +1279,31 @@ export default function ExamView({
 
           {allExamsView === "month" ? (
             <>
+              {courseLegend.length > 0 ? (
+                <div className="hidden sm:flex flex-wrap gap-2 border-b border-[#E4E4E7] bg-white px-3 py-3 dark:border-[#303030] dark:bg-[#262626] sm:px-4 lg:px-5">
+                  {courseLegend.map((courseName) => {
+                    const courseColor = getCourseColor(courseName);
+
+                    return (
+                      <span
+                        key={courseName}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#E4E4E7] bg-white px-2 py-1 text-[11px] font-medium text-[#52525B] dark:border-[#303030] dark:bg-[#303030] dark:text-[#B2B2B2]"
+                      >
+                        <span
+                          className={clsx(
+                            "h-2 w-2 flex-none rounded-full",
+                            courseColor.strong,
+                          )}
+                        />
+                        <span className="max-w-40 truncate sm:max-w-none">
+                          {courseName}
+                        </span>
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : null}
+
               <div className="grid grid-cols-7 border-b border-[#E4E4E7] bg-[#FAFAFA] dark:border-[#303030] dark:bg-[#303030]">
                 {weekdayLabels.map((day) => (
                   <div
@@ -1040,25 +1374,52 @@ export default function ExamView({
 
                       {dayGroup ? (
                         <>
-                          <div className="mt-auto sm:hidden">
-                            <div className="h-1.5 w-full rounded-full bg-[#93C5FD] dark:bg-[#4593F8]" />
-                          </div>
-
-                          <div className="hidden space-y-1.5 mt-2 sm:block">
-                            {dayGroup.subjects.slice(0, 2).map((subject) => (
-                              <div
+                          <div className="mt-auto flex flex-wrap gap-1 sm:hidden">
+                            {dayGroup.subjects.slice(0, 3).map((subject) => (
+                              <span
                                 key={`${dayGroup.day}-${subject.name}`}
                                 className={clsx(
-                                  "rounded-md px-2 py-1 text-left text-[11px] font-medium leading-4",
-                                  accentSoftClasses,
+                                  "h-1.5 w-4 rounded-full",
+                                  getCourseColor(subject.name).strong,
+                                )}
+                              />
+                            ))}
+                            {dayGroup.subjects.length > 3 ? (
+                              <span
+                                className={clsx(
+                                  "h-1.5 rounded-full px-1 text-[8px] font-semibold leading-[0.6rem]",
+                                  mutedTextClasses,
                                 )}
                               >
-                                <div className="truncate">{subject.name}</div>
-                                <div className="mt-0.5 truncate text-[10px] text-[#5A6B82] dark:text-[#D6E8FF]">
-                                  {subject.start} - {subject.end}
+                                +{dayGroup.subjects.length - 3}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className="mt-2 hidden space-y-1.5 sm:block">
+                            {dayGroup.subjects.slice(0, 2).map((subject) => {
+                              const subjectColor = getCourseColor(subject.name);
+
+                              return (
+                                <div
+                                  key={`${dayGroup.day}-${subject.name}`}
+                                  className={clsx(
+                                    "rounded-md px-2 py-1 text-left text-[11px] font-medium leading-4",
+                                    subjectColor.chip,
+                                  )}
+                                >
+                                  <div className="truncate">{subject.name}</div>
+                                  <div
+                                    className={clsx(
+                                      "mt-0.5 truncate text-[10px]",
+                                      subjectColor.time,
+                                    )}
+                                  >
+                                    {subject.start} - {subject.end}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                             {dayGroup.subjects.length > 2 ? (
                               <div
                                 className={clsx(
@@ -1109,6 +1470,7 @@ export default function ExamView({
                     {day.subjects.map((subject) => (
                       <AgendaPaperCard
                         key={`${day.day}-${subject.name}`}
+                        dayDate={day.date}
                         subject={subject}
                       />
                     ))}
@@ -1140,28 +1502,49 @@ export default function ExamView({
         className,
       )}
     >
-      <div className="flex flex-col gap-3 border-b border-[#E4E4E7] pb-3 dark:border-[#303030] sm:pb-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <NextExamCountdown upcomingPapers={upcomingPapers} />
+        <RemindersPanel
+          onEnableNotifications={handleEnableNotifications}
+          reminderMode={reminderMode}
+          onReminderModeChange={setReminderMode}
+        />
+      </div>
+      <div className="flex flex-col gap-2 border-b border-[#E4E4E7] pb-3 dark:border-[#303030] sm:pb-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="inline-flex rounded-md border border-[#E4E4E7] bg-[#FAFAFA] p-1 dark:border-[#303030] dark:bg-[#303030]">
           {examWindows.map((window) => {
             const isActive = activeWindow === window.id;
             const count = countGroupedPapers(examGroupsByWindow[window.id]);
 
             return (
-              <WindowTabButton
+              <button
                 key={window.id}
-                count={count}
-                isActive={isActive}
-                label={window.shortLabel}
                 onClick={() => setActiveWindow(window.id)}
-              />
+                className={clsx(
+                  "inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-white text-[#111827] shadow-sm dark:bg-[#262626] dark:text-[#F0F6FC]"
+                    : "text-[#71717A] hover:text-[#111827] dark:text-[#B2B2B2] dark:hover:text-[#F0F6FC]",
+                )}
+              >
+                <span className="truncate">{window.shortLabel}</span>
+                <span
+                  className={clsx(
+                    "inline-flex min-w-5 items-center justify-center rounded-sm px-1.5 py-0.5 text-[11px] font-semibold",
+                    isActive
+                      ? "bg-[#F4F4F5] text-[#111827] dark:bg-[#303030] dark:text-[#F0F6FC]"
+                      : "bg-white text-[#52525B] dark:bg-[#262626] dark:text-[#B2B2B2]",
+                  )}
+                >
+                  {count}
+                </span>
+              </button>
             );
           })}
         </div>
-        <div className="hidden sm:block sm:max-w-[32rem]">
-          <p className={clsx("text-sm", mutedTextClasses)}>
-            {getWindowDescription(activeWindow)}
-          </p>
-        </div>
+        <p className={clsx("text-sm", mutedTextClasses)}>
+          {getWindowDescription(activeWindow)}
+        </p>
       </div>
 
       <div className="min-w-0 space-y-8">

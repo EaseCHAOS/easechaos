@@ -30,13 +30,13 @@ function convertTimeToNumber(timeStr: string): number {
   return hours + minutes / 60;
 }
 
+function getCourseCode(line: string): string {
+  const match = line.match(/\b\d{3}\b/);
+  return match ? match[0] : "";
+}
+
 function splitEventValue(value: string): string[] {
   const lines = value.split("\n").filter(Boolean);
-
-  const getCourseCode = (line: string) => {
-    const match = line.match(/\b\d{3}\b/);
-    return match ? match[0] : "";
-  };
 
   const firstCourseCode = getCourseCode(lines[0]);
   if (lines.every((line) => getCourseCode(line) === firstCourseCode)) {
@@ -134,19 +134,18 @@ export default function WeekView({ schedule }: WeekViewProps) {
             previousEvent?.value?.trim() === current.value.trim();
 
           if ((isSameCourse && isSequential) || isHorizontalDuplicate) {
-            return [
-              ...acc.slice(0, -1),
-              {
-                ...previousEvent,
-                end: isSequential ? current.end : previousEvent.end,
-                horizontalSpan: isHorizontalDuplicate
-                  ? (previousEvent.horizontalSpan || 1) + 1
-                  : 1,
-              },
-            ];
+            acc[acc.length - 1] = {
+              ...previousEvent,
+              end: isSequential ? current.end : previousEvent.end,
+              horizontalSpan: isHorizontalDuplicate
+                ? (previousEvent.horizontalSpan || 1) + 1
+                : 1,
+            };
+          } else {
+            acc.push({ ...current, horizontalSpan: 1 });
           }
 
-          return [...acc, { ...current, horizontalSpan: 1 }];
+          return acc;
         },
         [] as ((typeof day.data)[0] & { horizontalSpan?: number })[],
       )
@@ -176,7 +175,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
           horizontalSpan: slot.horizontalSpan || 1,
         }));
       })
-      .sort((a, b) => a.startPosition - b.startPosition),
+      .toSorted((a, b) => a.startPosition - b.startPosition),
   }));
 
   return (
@@ -191,7 +190,7 @@ export default function WeekView({ schedule }: WeekViewProps) {
             <div className="flex-1 grid grid-cols-[repeat(27,1fr)] relative">
               {timeSlots.map((slot, index) => (
                 <div
-                  key={index}
+                  key={`${slot.hour}:${slot.minute}`}
                   className="text-left font-medium text-gray-700 dark:text-[#B2B2B2] text-xs whitespace-nowrap"
                   style={{
                     gridColumn: index + 1,
@@ -233,9 +232,9 @@ export default function WeekView({ schedule }: WeekViewProps) {
 
                   <div className="relative h-full bg-gray-50 dark:bg-[#262626] rounded-lg">
                     <div className="absolute inset-0 grid grid-cols-[repeat(27,1fr)] pointer-events-none">
-                      {timeSlots.map((_, index) => (
+                      {timeSlots.map((slot, index) => (
                         <div
-                          key={index}
+                          key={`${slot.hour}:${slot.minute}`}
                           className={clsx(
                             "border-l border-gray-200 dark:border-[#303030] h-full",
                             index === 0 && "border-l-0",
@@ -248,11 +247,11 @@ export default function WeekView({ schedule }: WeekViewProps) {
                       ))}
                     </div>
 
-                    {daySchedule?.events.map((slot, index) => {
+                    {daySchedule?.events.map((slot) => {
                       const colors = getCourseColor(slot.value);
                       return (
                         <div
-                          key={index}
+                          key={`${slot.start}-${slot.value}-${slot.splitIndex ?? 0}`}
                           className={clsx(
                             `absolute p-2 rounded-md border border-l-4 border-l-[${colors.bg}]`,
                             colors.bg,

@@ -73,7 +73,14 @@ const pwa = {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), VitePWA(pwa as Partial<VitePWAOptions>)],
+  plugins: [
+    react({
+      babel: {
+        plugins: ['babel-plugin-react-compiler'],
+      },
+    }),
+    VitePWA(pwa as Partial<VitePWAOptions>),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

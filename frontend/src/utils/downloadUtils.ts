@@ -176,8 +176,8 @@ export async function downloadElementAsPDF(
     const img = new Image();
     img.src = dataUrl;
 
-    await new Promise((resolve) => {
-      img.onload = resolve;
+    await new Promise<void>((resolve) => {
+      img.addEventListener("load", () => resolve(), { once: true });
     });
 
     const opt = {

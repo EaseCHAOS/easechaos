@@ -246,7 +246,7 @@ export default function DayView({ schedule }: DayViewProps) {
             ))}
           </div>
 
-          {mergedEvents.map((event, index) => {
+          {mergedEvents.map((event) => {
             const colors = getCourseColor(event.value);
             const width =
               event.isOverlapping || (event.totalSplits ?? 1) > 1
@@ -255,7 +255,7 @@ export default function DayView({ schedule }: DayViewProps) {
 
             return (
               <div
-                key={index}
+                key={`${event.start}-${event.value}-${event.splitIndex ?? 0}-${event.continuationGroup ?? ""}`}
                 className={clsx(
                   `absolute p-2 rounded-md border border-l-4 border-l-[${colors.bg}]`,
                   colors.bg,
