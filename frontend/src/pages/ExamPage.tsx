@@ -9,6 +9,13 @@ import { useAnalytics } from "../hooks/useAnalytics";
 import ThemeToggle from "../components/ThemeToggle";
 import { TimetableData } from "../types";
 import { departments, years } from "../constants/departments";
+import CelebrationOverlay from "../components/CelebrationOverlay";
+import ShareCard from "../components/ShareCard";
+import {
+  getCelebrationState,
+  shouldShowCelebration,
+} from "../lib/celebration";
+import { downloadElementAsImage } from "../utils/downloadUtils";
 
 const parseExamDate = (dateLabel: string) =>
   new Date(dateLabel.replace(/(\d+)(st|nd|rd|th)/g, "$1"));
@@ -86,6 +93,7 @@ export default function ExamPage() {
   const [error, setError] = useState<string | null>(null);
   const [examData, setExamData] = useState<TimetableData | null>(null);
   const [activeTool, setActiveTool] = useState<ExamTool>("schedule");
+  const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
     if (!dept || !year) {
@@ -126,6 +134,60 @@ export default function ExamPage() {
   const selectedDepartment = departments.find((entry) => entry.id === dept);
   const selectedYear = years.find((entry) => String(entry.id) === year);
   const totalDisplayedPapers = getGroupedPaperCount(examData);
+  const isFinalYear = String(year) === "4";
+  const celebrationState = (() => {
+    if (!examData) return null;
+    const dayDates = examData.data
+      .map((d) => parseExamDate(d.day))
+      .filter((d) => !isNaN(d.getTime()))
+      .toSorted((a, b) => a.getTime() - b.getTime());
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const remaining = dayDates.filter((d) => {
+      const sd = new Date(d);
+      sd.setHours(0, 0, 0, 0);
+      return sd.getTime() >= today.getTime();
+    }).length;
+    // Grouped papers: dedupe by day::value (mirrors getGroupedPaperCount)
+    const groupedKeys = new Set(
+      examData.data.flatMap((day) =>
+        day.data.map((e) => `${day.day}::${e.value}`),
+      ),
+    );
+    const groupedByDay = new Map<string, Set<string>>();
+    examData.data.forEach((day) => {
+      const set = groupedByDay.get(day.day) ?? new Set<string>();
+      day.data.forEach((e) => set.add(e.value));
+      groupedByDay.set(day.day, set);
+    });
+    const groupedDates = Array.from(groupedByDay.entries())
+      .map(([label, set]) => ({ label, date: parseExamDate(label), count: set.size }))
+      .toSorted((a, b) => a.date.getTime() - b.date.getTime());
+    // Remaining grouped papers
+    let remainingPapers = 0;
+    let lastPaperDate: Date | null = null;
+    for (const g of groupedDates) {
+      const sd = new Date(g.date);
+      sd.setHours(0, 0, 0, 0);
+      if (sd.getTime() >= today.getTime()) {
+        remainingPapers += g.count;
+        lastPaperDate = g.date;
+      }
+      if (!lastPaperDate || g.date > lastPaperDate) lastPaperDate = g.date;
+    }
+    // Fallback to dayDates if grouping empty
+    if (groupedDates.length === 0) {
+      lastPaperDate = dayDates[dayDates.length - 1] ?? null;
+      remainingPapers = remaining;
+    }
+    return getCelebrationState({
+      totalPapers: groupedKeys.size,
+      remainingPapers,
+      lastPaperDate,
+      isFinalYear,
+      hasExams: groupedKeys.size > 0,
+    });
+  })();
   const uniqueExamDays = examData
     ? Array.from(new Set(examData.data.map((day) => day.day))).toSorted(
         (left, right) =>
@@ -134,6 +196,13 @@ export default function ExamPage() {
     : [];
   const firstExamDay = uniqueExamDays[0];
   const lastExamDay = uniqueExamDays[uniqueExamDays.length - 1];
+
+  useEffect(() => {
+    if (!examData || !celebrationState) return;
+    if (!shouldShowCelebration(examData.version, celebrationState)) return;
+    const t = window.setTimeout(() => setShowCelebration(true), 700);
+    return () => window.clearTimeout(t);
+  }, [examData, celebrationState]);
 
   if (isLoading) {
     return (
@@ -284,6 +353,37 @@ export default function ExamPage() {
             />
           )}
         </div>
+      </div>
+
+      {showCelebration && celebrationState ? (
+        <CelebrationOverlay
+          state={celebrationState}
+          version={examData.version}
+          dept={dept ?? ""}
+          yearLabel={String(year ?? "")}
+          onClose={() => setShowCelebration(false)}
+          onShare={() =>
+            downloadElementAsImage(
+              "celebration-share-card",
+              `easeCHAOS-${dept}-${String(year ?? "")}.png`,
+            )
+          }
+        />
+      ) : null}
+
+      {/* Hidden share card DOM — captured as 1080² PNG for WhatsApp/X */}
+      <div className="pointer-events-none absolute left-[-9999px] top-0 opacity-0" aria-hidden>
+        <ShareCard
+          dept={dept ?? ""}
+          yearLabel={String(year ?? "")}
+          isGraduate={celebrationState === "GRADUATE_DONE"}
+          totalPapers={totalDisplayedPapers}
+          examPeriod={
+            uniqueExamDays.length
+              ? `${uniqueExamDays[0]} to ${uniqueExamDays[uniqueExamDays.length - 1]}`
+              : ""
+          }
+        />
       </div>
     </div>
   );

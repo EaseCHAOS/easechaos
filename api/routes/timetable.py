@@ -1,8 +1,11 @@
 import hashlib
 import json
 import logging
+import re
+from collections import defaultdict
+from datetime import datetime
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from api.config.redis_config import (
@@ -19,6 +22,12 @@ router = APIRouter()
 class TimeTableRequest(BaseModel):
     class_pattern: str
     is_exam: bool = False
+
+
+class HallScheduleRequest(BaseModel):
+    hall: str
+    date: str | None = None
+    period: str | None = None
 
 
 def get_json_table(request: TimeTableRequest):
@@ -41,6 +50,25 @@ def get_json_table(request: TimeTableRequest):
 
     assert table is not None
     return json.loads(table)
+
+
+def _normalize_hall(hall: str) -> str:
+    """Normalize a hall name for matching (case-insensitive, whitespace-insensitive)."""
+    return "".join(hall.upper().split())
+
+
+def _parse_exam_date_label(label: str) -> datetime:
+    """Parse a formatted exam date label like 'Monday, 17th August 2026'."""
+    cleaned = re.sub(r"(\d+)(st|nd|rd|th)", r"\1", str(label))
+    return datetime.strptime(cleaned, "%A, %d %B %Y")
+
+
+def _period_from_start(start: str) -> str:
+    """Map a start time back to a session period code (M/A/E)."""
+    if not start:
+        return ""
+    start_clean = start.strip().upper()
+    return {"7:00 AM": "M", "11:00 AM": "A", "3:00 PM": "E"}.get(start_clean, "")
 
 
 logging.basicConfig(level=logging.ERROR)
@@ -245,4 +273,109 @@ def get_time_table_endpoint(request: TimeTableRequest):
     return {
         "data": table_data,
         "version": content_hash,
+    }
+
+
+@router.get("/get_halls")
+def get_halls_endpoint():
+    """
+    Return all distinct lecture halls in the latest exam draft.
+
+    This powers the admin hall-schedule lookup so the hall list is always
+    in sync with the current draft.
+    """
+    content = _get_latest_draft(True).read_bytes()
+    table = get_exam_timetable(content, "")
+    halls = sorted(
+        {
+            str(hall).strip()
+            for hall in table["LECTURE HALL"].dropna().tolist()
+            if str(hall).strip()
+        }
+    )
+    return {"halls": halls}
+
+
+@router.post("/get_hall_schedule")
+def get_hall_schedule_endpoint(request: HallScheduleRequest):
+    """
+    Admin endpoint: find every class writing in a given lecture hall.
+
+    Returns all exams scheduled in the requested hall, grouped by date.
+    Optional filters: date (ISO format, e.g. '2026-08-18') and period (M/A/E).
+    """
+    content_hash = hashlib.md5(_get_latest_draft(True).read_bytes()).hexdigest()
+
+    normalized = _normalize_hall(request.hall)
+    if not normalized:
+        raise HTTPException(status_code=400, detail="hall is required")
+
+    # Empty class pattern matches all rows, giving the full exam timetable.
+    table = get_exam_timetable(_get_latest_draft(True).read_bytes(), "")
+
+    hall_col = table["LECTURE HALL"].astype(str)
+    matches = table[hall_col.map(_normalize_hall) == normalized]
+
+    if matches.empty:
+        return {
+            "hall": request.hall.strip().upper(),
+            "version": content_hash,
+            "data": [],
+        }
+
+    grouped: dict[str, list[dict]] = defaultdict(list)
+
+    for _, entry in matches.iterrows():
+        date_label = str(entry.get("DATE", ""))
+        start = entry.get("START", "")
+        end = entry.get("END", "")
+
+        try:
+            parsed_date = _parse_exam_date_label(date_label)
+        except (ValueError, TypeError):
+            logger.error(f"Skipping malformed exam date: {date_label}")
+            continue
+
+        if request.date:
+            request_date = datetime.strptime(request.date, "%Y-%m-%d")
+            if request_date.date() != parsed_date.date():
+                continue
+
+        if request.period:
+            period = _period_from_start(str(start))
+            if period != request.period.upper():
+                continue
+
+        grouped[date_label].append(
+            {
+                "course_no": entry.get("COURSE NO", ""),
+                "course_name": entry.get("COURSE NAME", ""),
+                "class": entry.get("CLASS", ""),
+                "start": start,
+                "end": end,
+                "location": entry.get("LECTURE HALL", ""),
+                "invigilator": entry.get("INVIGILATOR (UPDATED)")
+                or entry.get("INVIGILATORS")
+                or "",
+            }
+        )
+
+    data = [
+        {
+            "day": date_label,
+            "date": _parse_exam_date_label(date_label).strftime("%Y-%m-%d"),
+            "data": sorted(
+                rows, key=lambda row: (str(row["start"]), str(row["class"]))
+            ),
+        }
+        for date_label, rows in sorted(
+            grouped.items(),
+            key=lambda item: _parse_exam_date_label(item[0]),
+        )
+    ]
+
+    return {
+        "hall": request.hall.strip().upper(),
+        "version": content_hash,
+        "data": data,
     }

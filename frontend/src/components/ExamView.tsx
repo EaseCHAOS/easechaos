@@ -1479,13 +1479,16 @@ export default function ExamView({
               ))}
 
               <div className="flex justify-end pt-4">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#E4E4E7] bg-white px-3 py-2 text-xs font-medium text-[#52525B] dark:border-[#303030] dark:bg-[#262626] dark:text-[#B2B2B2]">
+                <div className="inline-flex items-center gap-2.5 rounded-full border border-[#E4E4E7] bg-white px-4 py-2.5 text-sm font-semibold text-[#52525B] shadow-sm dark:border-[#303030] dark:bg-[#262626] dark:text-[#B2B2B2]">
                   <img
                     src={easeChaosLogo}
                     alt="easeCHAOS"
-                    className="h-4 w-6 object-contain"
+                    className="h-7 w-9 object-contain"
                   />
                   <span>Exported from easeCHAOS</span>
+                  <span className="hidden text-xs font-medium text-[#71717A] dark:text-[#71717A] sm:inline">
+                    easechaos.xyz
+                  </span>
                 </div>
               </div>
             </div>

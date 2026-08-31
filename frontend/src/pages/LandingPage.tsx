@@ -10,6 +10,7 @@ import easeChaosLogo from "../../assets/easechaos.png";
 import ThemeToggle from "../components/ThemeToggle";
 import SEO from "../components/SEO";
 import { useAnalytics } from "../hooks/useAnalytics";
+import TeaserBanner from "../components/TeaserBanner";
 import clsx from "clsx";
 import {
   Select,
@@ -41,6 +42,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#02040A] flex flex-col items-center justify-center p-4 md:p-6 mx-auto overflow-hidden relative">
+      <TeaserBanner />
       <SEO
         ogUrl="https://easechaos.xyz"
       />
@@ -316,6 +318,14 @@ export default function LandingPage() {
             </a>
             .
           </p>
+        </div>
+        <div className="mt-4 flex items-center justify-center">
+          <a
+            className="rounded-full border border-[#E4E4E7] px-4 py-1.5 text-xs font-medium text-[#71717A] transition-colors hover:bg-[#F4F4F5] dark:border-[#303030] dark:text-[#B2B2B2] dark:hover:bg-[#303030]"
+            href="/admin/halls"
+          >
+            Admin · Hall schedule
+          </a>
         </div>
       </footer>
     </div>

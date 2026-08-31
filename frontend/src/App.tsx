@@ -8,6 +8,8 @@ import {
 import { HelmetProvider } from "react-helmet-async";
 import LandingPage from "./pages/LandingPage";
 import ExamPage from "./pages/ExamPage";
+import HallSchedulePage from "./pages/HallSchedulePage";
+import CelebrationPreviewPage from "./pages/CelebrationPreviewPage";
 import Calendar from "./components/Calendar";
 import AnnouncementBanner from "./components/AnnouncementBanner";
 import SEO from "./components/SEO";
@@ -46,6 +48,8 @@ function AppContent() {
       />
       <Route path="/timetable/:dept/:year" element={<Calendar />} />
       <Route path="/exam/:dept/:year" element={<ExamPage />} />
+      <Route path="/admin/halls" element={<HallSchedulePage />} />
+      <Route path="/preview/celebration" element={<CelebrationPreviewPage />} />
     </Routes>
   );
 }

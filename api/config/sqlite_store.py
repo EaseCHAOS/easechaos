@@ -19,18 +19,21 @@ def _get_db() -> sqlite3.Connection:
 
 
 def init_db():
-    conn = _get_db()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS timetables (
-            cache_key TEXT NOT NULL,
-            file_hash TEXT NOT NULL,
-            data TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (cache_key, file_hash)
-        )
-    """)
-    conn.commit()
-    conn.close()
+    try:
+        conn = _get_db()
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS timetables (
+                cache_key TEXT NOT NULL,
+                file_hash TEXT NOT NULL,
+                data TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (cache_key, file_hash)
+            )
+        """)
+        conn.commit()
+        conn.close()
+    except sqlite3.Error as e:
+        logger.warning(f"SQLite init skipped (readonly or unavailable): {e}")
 
 
 def get_timetable(cache_key: str, file_hash: str) -> str | None:
