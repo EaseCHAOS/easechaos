@@ -95,6 +95,10 @@ NB: This project is still under development. You might encounter bugs with the p
 <img src="docs/screenshot3.png" width="900">
 <img src="docs/screenshot4.png" width="900">
 <img src="docs/screenshot5.png" width="900">
+
+#### Exam Schedule — CE 4 Month & Agenda
+<img src="docs/assets/generated/carousel-1-ce-4.png" width="900">
+<img src="docs/assets/generated/carousel-2-ce-4.png" width="900">
     
 ## Maintainer
 - [@Bernard Katamanso](https://github.com/adjanour)
